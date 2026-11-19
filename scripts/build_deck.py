@@ -130,7 +130,35 @@ def _prepare_frame(tf, anchor):
         tf.vertical_anchor = ANCHORS[anchor]
 
 
-def _write_paragraphs(tf, paras):
+# PowerPoint's own palette shades of a theme colour ("Darker 25%", "Darker 50%";
+# "Lighter 40%", "Lighter 60%"), nearest first, so shaded text still follows the theme.
+DARKER_SHADES = ((("lumMod", 75000),), (("lumMod", 50000),))
+LIGHTER_SHADES = ((("lumMod", 60000), ("lumOff", 40000)), (("lumMod", 40000), ("lumOff", 60000)))
+
+
+def text_ink(info, bg):
+    """Returns ink(scheme, size, bold) -> (scheme, mods) for one slide background.
+
+    A template's brand accent is often too light for text on white (a green
+    that passes as a bar fails as a word), so a colour that fails contrast is
+    written as its nearest palette shade that passes, and as tx1 if none does.
+    """
+    light_bg = bool(bg) and themes.contrast_ratio(bg, "000000") >= themes.contrast_ratio(bg, "FFFFFF")
+    shades = DARKER_SHADES if light_bg else LIGHTER_SHADES
+
+    def ink(scheme, size, bold):
+        base = ooxml.scheme_hex(info, scheme)
+        if not (base and bg):
+            return scheme, ()
+        need = themes.contrast_need(size, bold)
+        for mods in ((),) + shades:
+            if themes.contrast_ratio(ooxml.apply_mods(base, mods), bg) >= need:
+                return scheme, mods
+        return "tx1", ()
+    return ink
+
+
+def _write_paragraphs(tf, paras, ink):
     for i, p in enumerate(paras):
         para = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         ooxml.set_paragraph(para, align=ALIGN[p["align"]], indent_pt=p["indent"], hanging_pt=p["hanging"],
@@ -142,11 +170,12 @@ def _write_paragraphs(tf, paras):
                 para.add_line_break()
             run = para.add_run()
             run.text = segment
+            color, mods = ink(p["color"], p["size"], p["bold"])
             ooxml.style_run_props(run._r.get_or_add_rPr(), size_pt=p["size"], bold=p["bold"],
-                                  italic=p["italic"], color=p["color"], font_ref=font_ref)
+                                  italic=p["italic"], color=color, mods=mods, font_ref=font_ref)
 
 
-def draw_text(slide, el):
+def draw_text(slide, el, ink):
     shape = None
     if el["placeholder"]:
         shape = slide.shapes.title
@@ -158,11 +187,11 @@ def draw_text(slide, el):
     tf = shape.text_frame
     tf.clear()
     _prepare_frame(tf, el["anchor"])
-    _write_paragraphs(tf, el["paras"])
+    _write_paragraphs(tf, el["paras"], ink)
     return shape
 
 
-def draw_slide_number(slide, el, number):
+def draw_slide_number(slide, el, number, ink):
     shape = slide.shapes.add_textbox(*el["box"])
     shape.name = el["name"]
     tf = shape.text_frame
@@ -170,10 +199,11 @@ def draw_slide_number(slide, el, number):
     para = tf.paragraphs[0]
     ooxml.set_paragraph(para, align=el["align"])
     r_pr = ooxml.add_slide_number(para, number)
-    ooxml.style_run_props(r_pr, size_pt=el["size"], color="tx2", font_ref="+mn-lt")
+    color, mods = ink("tx2", el["size"], False)
+    ooxml.style_run_props(r_pr, size_pt=el["size"], color=color, mods=mods, font_ref="+mn-lt")
 
 
-def draw_table(slide, el):
+def draw_table(slide, el, ink):
     cols, rows = el["columns"], el["rows"]
     frame = slide.shapes.add_table(len(rows) + 1, len(cols), *el["box"])
     frame.name = el["name"]
@@ -198,9 +228,10 @@ def draw_table(slide, el):
             ooxml.set_paragraph(para, align=ALIGN[el["align"][j]])
             run = para.add_run()
             run.text = value
-            ooxml.style_run_props(run._r.get_or_add_rPr(), size_pt=el["size"], bold=header or highlighted,
-                                  color="accent1" if highlighted else ("tx2" if header else "tx1"),
-                                  font_ref="+mn-lt")
+            bold = header or highlighted
+            color, mods = ink("accent1" if highlighted else ("tx2" if header else "tx1"), el["size"], bold)
+            ooxml.style_run_props(run._r.get_or_add_rPr(), size_pt=el["size"], bold=bold,
+                                  color=color, mods=mods, font_ref="+mn-lt")
             last = i == len(rows)
             ooxml.set_cell_borders(cell, bottom=HEADER_RULE if header else (None if last else ROW_RULE))
     lines = [", ".join(cols)] + [", ".join(r) for r in rows[:TABLE_ALT_MAX_ROWS]]
@@ -241,17 +272,18 @@ def render(prs, spec, plans, choose_layout, info):
     for n, (slide_spec, elements) in enumerate(zip(spec["slides"], plans), 1):
         slide = prs.slides.add_slide(choose_layout(slide_spec["layout"]))
         remove_unused_placeholders(slide)
+        ink = text_ink(info, ooxml.slide_background_hex(slide, info))
         for el in elements:
             if el["kind"] == "text":
-                draw_text(slide, el)
+                draw_text(slide, el, ink)
             elif el["kind"] == "chart":
                 charts.add_chart(slide, el, colors)
             elif el["kind"] == "table":
-                draw_table(slide, el)
+                draw_table(slide, el, ink)
             elif el["kind"] == "image":
                 draw_image(slide, el)
             elif el["kind"] == "slidenum":
-                draw_slide_number(slide, el, n)
+                draw_slide_number(slide, el, n, ink)
         if slide_spec.get("notes"):
             slide.notes_slide.notes_text_frame.text = slide_spec["notes"]
     meta = spec.get("meta") or {}

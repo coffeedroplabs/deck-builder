@@ -18,7 +18,11 @@ It accepts .pptx and .potx. It prints:
   builder scales its grid to any size, but check the render closely);
 - the theme fonts and the colours the build will use for each role (text,
   background, muted, accent, series), with `font-not-metric-safe` and
-  `theme-contrast` warnings where they apply;
+  `theme-contrast` warnings where they apply. A brand accent too light for
+  words on white is common; the build writes accent text (the ask, big
+  numbers, step numbers, a highlighted row) in PowerPoint's "Darker 25%" or
+  "Darker 50%" shade of it, whichever is lighter and still passes, so keep
+  using those layouts rather than avoiding the accent;
 - every layout with its placeholders and its fixed art (logos, bands,
   pictures on the layout or the master), each art piece marked with the area
   it sits in;

@@ -149,8 +149,7 @@ class Lint:
             fg = ooxml.color_hex(fill, self.info) if fill is not None else ooxml.scheme_hex(self.info, "tx1")
             if bg and fg:
                 bold = r_pr is not None and r_pr.get("b") in ("1", "true")
-                large = size is not None and (size >= 18 or (bold and size >= 14))
-                need = themes.CONTRAST["large" if large else "text"]
+                need = themes.contrast_need(size, bold)
                 ratio = themes.contrast_ratio(fg, bg)
                 if ratio < need:
                     self.add("error", "low-contrast", n, name,

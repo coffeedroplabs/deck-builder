@@ -196,6 +196,12 @@ def contrast_ratio(a, b):
     return (la + 0.05) / (lb + 0.05)
 
 
+def contrast_need(size_pt, bold):
+    """The WCAG ratio text needs: large text is 18 pt, or 14 pt bold."""
+    large = size_pt is not None and (size_pt >= 18 or (bold and size_pt >= 14))
+    return CONTRAST["large" if large else "text"]
+
+
 def theme_contrast_problems(theme):
     """Pairs in a theme that fail WCAG, so a brand override cannot ship unreadable colours."""
     c = theme["colors"]

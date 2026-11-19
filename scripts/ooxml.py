@@ -98,11 +98,11 @@ def role_colors(info):
     return {role: scheme_hex(info, val) for role, val in themes.ROLE_SCHEME.items()}
 
 
-def _apply_mods(hex6, elem):
+def apply_mods(hex6, mods):
+    """hex6 after DrawingML colour modifiers, given as (tag, val) pairs such as ("lumMod", 75000)."""
     r, g, b = (int(hex6[i:i + 2], 16) / 255 for i in (0, 2, 4))
-    for mod in elem:
-        tag = etree.QName(mod).localname
-        v = int(mod.get("val", "100000")) / 100000
+    for tag, val in mods:
+        v = val / 100000
         if tag in ("lumMod", "lumOff"):
             h, light, s = colorsys.rgb_to_hls(r, g, b)
             light = light * v if tag == "lumMod" else light + v
@@ -129,7 +129,8 @@ def color_hex(color_parent, info):
             base = {"black": "000000", "white": "FFFFFF"}.get(child.get("val"))
         else:
             continue
-        return _apply_mods(base, child) if base and len(base) == 6 else None
+        mods = [(etree.QName(m).localname, int(m.get("val", "100000"))) for m in child]
+        return apply_mods(base, mods) if base and len(base) == 6 else None
     return None
 
 
@@ -293,7 +294,7 @@ def add_slide_number(paragraph, number):
     return r_pr
 
 
-def style_run_props(r_pr, *, size_pt, bold=False, italic=False, color=None, font_ref=None):
+def style_run_props(r_pr, *, size_pt, bold=False, italic=False, color=None, mods=(), font_ref=None):
     r_pr.set("sz", str(int(round(size_pt * 100))))
     r_pr.set("b", "1" if bold else "0")
     r_pr.set("i", "1" if italic else "0")
@@ -302,7 +303,10 @@ def style_run_props(r_pr, *, size_pt, bold=False, italic=False, color=None, font
             r_pr.remove(child)
     if color:
         fill = etree.SubElement(r_pr, qn("a:solidFill"))
-        etree.SubElement(fill, qn("a:schemeClr")).set("val", color)
+        clr = etree.SubElement(fill, qn("a:schemeClr"))
+        clr.set("val", color)
+        for tag, val in mods:
+            etree.SubElement(clr, qn(f"a:{tag}")).set("val", str(val))
     if font_ref:
         etree.SubElement(r_pr, qn("a:latin")).set("typeface", font_ref)
 

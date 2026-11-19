@@ -156,7 +156,12 @@ def inspect(path):
     roles = ooxml.role_colors(info)
     if all(roles.get(k) for k in ("text", "bg", "muted", "accent", "series", "third")):
         for msg in themes.theme_contrast_problems({"colors": roles}):
-            add("warning", "theme-contrast", f"{msg}; the lint will fail any text set in that colour")
+            if msg.startswith("text "):
+                add("warning", "theme-contrast", f"{msg}; body text will fail the lint")
+            else:
+                add("warning", "theme-contrast",
+                    f"{msg}; words in that colour are written in its nearest darker or lighter palette "
+                    "shade that passes, so they look darker than the brand colour; chart fills keep it as is")
     if not any(lay["has_title"] for lay in layouts):
         add("error", "no-title-layout", "no layout has a title placeholder; the build needs one for every slide")
     if not (mapping.get("bullets")):

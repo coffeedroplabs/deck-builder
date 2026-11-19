@@ -54,11 +54,12 @@ def _add_master_art(prs, name, box, text):
     ooxml.remove_all_slides(prs)
 
 
-def make_template(path, logo_over_title=False, footer_logo=False):
+def make_template(path, logo_over_title=False, footer_logo=False, accent=None):
     prs = Presentation()
     ooxml.scale_master(prs, themes.SLIDE_W / prs.slide_width, themes.SLIDE_H / prs.slide_height)
     prs.slide_width, prs.slide_height = themes.SLIDE_W, themes.SLIDE_H
-    ooxml.apply_theme(prs, themes.resolve_theme(BRAND))
+    brand = {**BRAND, "colors": {**BRAND["colors"], **({"accent": accent} if accent else {})}}
+    ooxml.apply_theme(prs, themes.resolve_theme(brand))
     _add_master_art(prs, "Brand logo", LOGO, "BRAND")
     if footer_logo:
         _add_master_art(prs, "Footer mark", FOOTER_LOGO, "brand.example")

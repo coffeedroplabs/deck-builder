@@ -18,6 +18,7 @@ import sys
 
 import pytest
 from lxml import etree
+from pptx import Presentation
 from pptx.oxml.ns import qn
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -263,7 +264,6 @@ def _line_slide(spec, names):
 
 
 def _plot_layout(deck, i):
-    from pptx import Presentation
     chart = next(s.chart for s in Presentation(deck).slides[i].shapes if s.has_chart)
     return chart._chartSpace.chart.plotArea.find(qn("c:layout"))
 
@@ -397,7 +397,9 @@ def templates(tmp_path_factory):
     folder = tmp_path_factory.mktemp("templates")
     return {"brand": make_template(str(folder / "brand.pptx")),
             "brand-bad": make_template(str(folder / "brand-bad.pptx"), logo_over_title=True),
-            "brand-footer": make_template(str(folder / "brand-footer.pptx"), footer_logo=True)}
+            "brand-footer": make_template(str(folder / "brand-footer.pptx"), footer_logo=True),
+            # A light green like many brand accents: fine as a bar, too light for words on white.
+            "brand-light": make_template(str(folder / "brand-light.pptx"), accent="90C226")}
 
 
 def test_inspector_accepts_the_brand_template(templates):
@@ -432,6 +434,16 @@ def template_spec(folder, template_path):
 def test_template_canary_passes_the_gate(deck_dir, templates):
     _, result = build_and_lint(deck_dir, template_spec(deck_dir, templates["brand"]))
     assert result["passed"], result["errors"]
+
+
+def test_a_light_brand_accent_is_shaded_until_it_reads(deck_dir, templates):
+    _, result = build_and_lint(deck_dir, template_spec(deck_dir, templates["brand-light"]))
+    assert result["passed"], result["errors"]
+    # Shaded, not swapped for the text colour, so the emphasis keeps the brand's hue.
+    accent_text = [clr for slide in Presentation(str(deck_dir / "deck.pptx")).slides
+                   for clr in slide._element.iter(qn("a:schemeClr"))
+                   if clr.get("val") == "accent1" and clr.getparent().getparent().tag == qn("a:rPr")]
+    assert accent_text and all(clr.find(qn("a:lumMod")) is not None for clr in accent_text)
 
 
 def test_titles_covering_the_logo_fail_the_gate(deck_dir, templates):
