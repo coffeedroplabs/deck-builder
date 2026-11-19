@@ -655,7 +655,12 @@ def test_an_unlisted_font_is_found_by_its_own_family_name(tmp_path, monkeypatch)
     from PIL import ImageFont
     for path in textfit._font_index().values():
         if path.lower().endswith(".ttf"):
-            family, style = ImageFont.truetype(path, 10).getname()
+            # Bitmap-only faces such as Noto Color Emoji refuse a 10 px size;
+            # the family scan skips them the same way.
+            try:
+                family, style = ImageFont.truetype(path, 10).getname()
+            except (OSError, ValueError):
+                continue
             if family and family.lower() not in textfit.FONT_FILES and style.lower() == "regular":
                 break
     else:
