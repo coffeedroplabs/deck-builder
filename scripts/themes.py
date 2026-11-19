@@ -6,6 +6,8 @@ references/design-rules.md; the weakly sourced ones (read-ahead sizes, title
 length, margin) are conventions, not research results.
 """
 
+VERSION = "1.0.0"
+
 EMU_PER_INCH = 914400
 EMU_PER_PT = 12700
 

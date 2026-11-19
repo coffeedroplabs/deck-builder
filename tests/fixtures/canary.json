@@ -1,0 +1,142 @@
+{
+  "profile": "live",
+  "theme": "paper",
+  "meta": {"title": "Northwind returns review", "author": "Operations team"},
+  "slides": [
+    {
+      "layout": "cover",
+      "title": "Returns cost us more than shipping does",
+      "subtitle": "What we found in six months of returns data, and the one change we propose",
+      "byline": "Operations team, November 2026"
+    },
+    {
+      "layout": "statement",
+      "title": "One in five orders comes back, and each return costs twice the outbound trip",
+      "body": "Fixing sizing on three product lines would remove most of that cost.",
+      "source": "Warehouse system, January to June 2026",
+      "notes": "Open with the cost comparison. The audience thinks shipping is the big line item; it is not."
+    },
+    {
+      "layout": "big-number",
+      "title": "Returns now cost more than outbound shipping",
+      "number": "$1.4m",
+      "label": "spent handling returns in the first half of 2026",
+      "context": "Outbound shipping cost $0.7m over the same months.",
+      "source": "Finance ledger, H1 2026",
+      "notes": "Pause on the number. Then say where it comes from."
+    },
+    {
+      "layout": "chart",
+      "title": "Return rates doubled after the March size-chart change",
+      "chart": {
+        "type": "column",
+        "categories": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+        "series": [{"name": "Return rate", "values": [0.098, 0.102, 0.164, 0.201, 0.207, 0.211]}],
+        "highlight": "Mar",
+        "number_format": "0%",
+        "labels": true
+      },
+      "bullets": ["March is when the new size chart went live", "Rates have stayed high since"],
+      "source": "Warehouse system, monthly return rate",
+      "notes": "The step change lines up with the size chart release on 4 March."
+    },
+    {
+      "layout": "chart",
+      "title": "Three product lines account for most returned units",
+      "chart": {
+        "type": "bar",
+        "categories": ["Trail jackets", "Running tights", "Rain shells", "Base layers", "Socks"],
+        "series": [{"name": "Returned units", "values": [4200, 3100, 2600, 900, 400]}],
+        "highlight": ["Trail jackets", "Running tights", "Rain shells"],
+        "number_format": "#,##0",
+        "labels": true
+      },
+      "source": "Warehouse system, returned units January to June 2026",
+      "notes": "The top three lines are all sized garments with the new chart."
+    },
+    {
+      "layout": "chart",
+      "title": "Fixing sizing on the top three lines saves about $0.6m a year",
+      "chart": {
+        "type": "waterfall",
+        "categories": ["Current cost", "Trail jackets", "Running tights", "Rain shells", "After fix"],
+        "series": [{"name": "Annual returns cost", "values": [2.8, -0.28, -0.19, -0.14, 2.19]}],
+        "totals": ["Current cost", "After fix"],
+        "number_format": "\"$\"0.0\"m\""
+      },
+      "source": "Finance model, annualised H1 2026 costs",
+      "notes": "Each bar is the saving if that line's return rate goes back to its January level."
+    },
+    {
+      "layout": "table",
+      "title": "Wrong size is the reason given for most returns",
+      "table": {
+        "columns": ["Reason given", "Share of returns", "Change since January"],
+        "rows": [
+          ["Too small", "38%", "+14 pts"],
+          ["Too large", "21%", "+6 pts"],
+          ["Changed my mind", "17%", "-2 pts"],
+          ["Damaged in transit", "9%", "0 pts"],
+          ["Other", "15%", "-3 pts"]
+        ],
+        "highlight_row": 0
+      },
+      "source": "Returns form, 18,240 responses",
+      "notes": "Too small is the single biggest reason and it grew the most."
+    },
+    {
+      "layout": "two-column",
+      "title": "Customers who returned for size still liked the product",
+      "left": {"heading": "What they said", "bullets": ["Fabric and fit were praised", "Most asked for an exchange"]},
+      "right": {"heading": "What they did", "bullets": ["Half reordered a different size", "Few left a low rating"]},
+      "notes": "This is a sizing problem, not a product problem."
+    },
+    {
+      "layout": "quote",
+      "title": "Customers tell us the chart runs small",
+      "quote": "I am always a medium, but your medium was tight across the shoulders.",
+      "attribution": "Returns form comment, April 2026",
+      "notes": "Many comments say the same thing in different words."
+    },
+    {
+      "layout": "section",
+      "title": "What we propose",
+      "subtitle": "One change, tested on one line first"
+    },
+    {
+      "layout": "process",
+      "title": "We can test the fix on trail jackets within four weeks",
+      "steps": [
+        {"label": "Re-measure", "detail": "Fit lab measures ten jackets per size"},
+        {"label": "Update chart", "detail": "Publish the new chart on product pages"},
+        {"label": "Watch returns", "detail": "Compare four weeks against the old rate"},
+        {"label": "Roll out", "detail": "Extend to the other two lines if it works"}
+      ],
+      "notes": "Each step is owned by a named team; the owners are in the appendix."
+    },
+    {
+      "layout": "image",
+      "title": "The fit lab can measure every size in one week",
+      "image": {"path": "warehouse.png", "alt": "Bar diagram of fit lab capacity rising across four weeks"},
+      "bullets": ["Ten jackets per size", "Results shared each Friday"],
+      "notes": "The lab already has the equipment."
+    },
+    {
+      "layout": "bullets",
+      "title": "The risk is small and easy to reverse",
+      "bullets": [
+        "Only the size chart changes, not the products",
+        {"text": "We can switch back the same day", "sub": ["The old chart stays in the system"]},
+        "Four weeks is enough to see the effect"
+      ],
+      "notes": "Address the obvious objection before the ask."
+    },
+    {
+      "layout": "conclusion",
+      "title": "Approve the trail jacket test this week",
+      "bullets": ["Returns cost more than shipping", "Wrong size drives the increase", "A four-week test shows if the fix works"],
+      "ask": "Decision needed: approve the four-week test on trail jackets",
+      "notes": "End on the ask. Stop talking after it."
+    }
+  ]
+}

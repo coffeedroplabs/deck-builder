@@ -66,6 +66,15 @@ COUNT_RE = re.compile(
 DIGIT_RE = re.compile(r"\d")
 WORD_RE = re.compile(r"[^\W_][\w'’%.,$€£/-]*", re.UNICODE)
 
+# A quantity someone could ask "says who?" about: money, percentages,
+# multipliers, scaled or decimal figures, thousands. Plain small integers,
+# years and dates are left alone, since "3 steps" or "April 2027" need no source.
+NUMBER_CLAIM_RE = re.compile(
+    r"[$€£¥]\s?\d|\d[\d,.]*\s?(%|x\b|percent\b|pts?\b|k\b|m\b|bn\b|million\b|billion\b|thousand\b)|"
+    r"\b\d{1,3}(,\d{3})+\b|\b\d+\.\d+\b",
+    re.IGNORECASE,
+)
+
 
 def normalize(text):
     return " ".join(unicodedata.normalize("NFC", text or "").split())
@@ -146,6 +155,10 @@ def top_level_items(slide):
     if layout == "chart":
         return len((slide.get("chart") or {}).get("categories") or [])
     return None
+
+
+def has_number_claim(text):
+    return bool(NUMBER_CLAIM_RE.search(text or ""))
 
 
 def title_count(title):
