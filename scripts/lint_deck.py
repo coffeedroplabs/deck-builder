@@ -28,6 +28,7 @@ from pptx.oxml.ns import qn
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import check_story  # noqa: E402
 import ooxml  # noqa: E402
 import rules  # noqa: E402
 import spec_check  # noqa: E402
@@ -38,7 +39,7 @@ SMALL_TEXT_SHAPES = {"Source", "Slide number"}  # held to the source floor, not 
 NOTES_EXEMPT = {"cover", "section"}
 TOL_PT = 1.0
 TOL_EMU = int(TOL_PT * themes.EMU_PER_PT)
-APPROVAL_FILE = "outline.approved.json"
+APPROVAL_FILE = check_story.APPROVAL_FILE
 
 
 def sha256_file(path):
@@ -257,19 +258,17 @@ class Lint:
     # -- the outline the user approved -------------------------------------------
 
     def check_approval(self, approval_path):
-        if not os.path.exists(approval_path):
+        state = check_story.approval_state(self.spec["slides"], approval_path)
+        if state["status"] == "missing":
             self.add("warning", "story-unapproved", None, "",
                      "no approved outline; run check_story.py and get the user's approval of the titles")
-            return {"status": "missing", "path": approval_path}
-        with open(approval_path, encoding="utf-8") as f:
-            approved = json.load(f)
-        current = rules.titles_hash(self.spec["slides"])
-        status = "approved" if approved.get("titles_hash") == current else "stale"
-        if status == "stale":
+        elif state["status"] == "stale":
             self.add("warning", "story-changed", None, "",
                      "the titles changed since the user approved the outline; show them the new titles")
-        return {"status": status, "path": approval_path, "approved_by": approved.get("approved_by"),
-                "approved_at": approved.get("approved_at")}
+        return state
+
+    def check_structure(self):
+        self.problems += check_story.story_problems(self.spec["slides"])
 
 
 def _as_list(v):
@@ -329,6 +328,7 @@ def lint(deck_path, spec_path, measure_path=None, approval_path=None):
     linter.check_package()
     linter.check_matches_spec()
     linter.check_slides()
+    linter.check_structure()
     if measure_path is None:
         default = os.path.join(os.path.dirname(os.path.abspath(deck_path)), "render", "measure.json")
         measure_path = default if os.path.exists(default) else None
