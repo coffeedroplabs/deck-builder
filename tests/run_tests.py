@@ -164,10 +164,13 @@ def test_a_wrong_path_fails_cleanly(deck_dir, capsys):
     missing = str(deck_dir / "missing.json")
     assert build_deck.main([missing, "--check-only"]) == 2
     assert lint_deck.main([str(deck_dir / "missing.pptx"), "--spec", missing]) == 2
-    assert render.main([str(deck_dir / "missing.pptx"), "-o", str(deck_dir / "render")]) == 2
     err = capsys.readouterr().err
     assert "Traceback" not in err
-    assert f"Cannot read {missing}" in err and "missing.pptx" in err
+    assert f"Cannot read {missing}" in err
+    # On a machine with no renderer, this said "neither PowerPoint nor
+    # LibreOffice is available" and never named the wrong path.
+    assert render.main([str(deck_dir / "missing.pptx"), "-o", str(deck_dir / "render")]) == 2
+    assert capsys.readouterr().err == f"Cannot read {deck_dir / 'missing.pptx'}: No such file or directory\n"
 
 
 # -- spec problems the build refuses ------------------------------------------

@@ -244,6 +244,14 @@ def main(argv=None):
     ap.add_argument("--width", type=int, default=WIDTH)
     ap.add_argument("--timeout", type=int, default=300)
     args = ap.parse_args(argv)
+    # Before a renderer is chosen, so a wrong path is reported as that and not
+    # as a missing PowerPoint or LibreOffice.
+    try:
+        with open(args.deck, "rb"):
+            pass
+    except OSError as e:
+        print(f"Cannot read {args.deck}: {e.strerror}", file=sys.stderr)
+        return 2
     try:
         measure = render(args.deck, args.out, args.backend, args.width, args.timeout)
     except (RuntimeError, OSError, subprocess.TimeoutExpired) as e:
