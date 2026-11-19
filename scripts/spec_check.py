@@ -373,9 +373,13 @@ class _Checker:
             self.error("missing-field", n, "chart.categories", "categories must be a non-empty list")
             return
         cats = [str(c) for c in cats]
-        if len(cats) > prof["max_categories"]:
+        # A line stays one shape however many points it has, and layout.py
+        # already refuses axis labels that crowd, so a time series is never cut
+        # to fit the cap (a first eval run dropped a month to get under it).
+        if ctype != "line" and len(cats) > prof["max_categories"]:
             self.error("too-many-categories", n, "chart.categories",
-                       f"{len(cats)} categories; at most {prof['max_categories']}. Group the tail into 'Other'")
+                       f"{len(cats)} categories; at most {prof['max_categories']}. Group the tail into "
+                       "'Other', or show a time series as a line or in coarser periods; never drop points")
         if ctype == "pie" and len(cats) > prof["max_pie_slices"]:
             self.error("too-many-slices", n, "chart.categories",
                        f"{len(cats)} slices; at most {prof['max_pie_slices']}. Use a bar chart")

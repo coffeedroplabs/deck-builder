@@ -295,6 +295,21 @@ def test_a_long_series_name_warns(deck_dir):
     assert result["passed"], result["errors"]
 
 
+MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def test_a_year_of_months_fits_a_line_but_not_a_column(deck_dir):
+    spec = canary()
+    i = _line_slide(spec, ["Return rate"])
+    chart = spec["slides"][i]["chart"]
+    chart["categories"] = MONTHS
+    chart["series"][0]["values"] = [0.1 + k / 100 for k in range(12)]
+    report, result = build_and_lint(deck_dir, spec)
+    assert result["passed"], result["errors"]
+    chart["type"] = "column"
+    assert "too-many-categories" in codes(spec_check.errors(spec_check.check_spec(spec, str(deck_dir))))
+
+
 def test_waterfall_series_floats_changes_on_the_running_total():
     assert charts.waterfall_series(["Start", "Up", "Down", "End"], [10, 5, -3, 12], ["Start", "End"]) == {
         "Base": [None, 10, 12, None],
