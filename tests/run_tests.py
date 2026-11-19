@@ -599,6 +599,35 @@ def test_fit_size_steps_down_then_gives_up():
     assert size is None and not result["fits"]
 
 
+def _clear_font_caches():
+    for cached in (textfit.font_file, textfit._font_index, textfit._family_index):
+        cached.cache_clear()
+
+
+def test_an_unlisted_font_is_found_by_its_own_family_name(tmp_path, monkeypatch):
+    # WSL's case: Trebuchet MS sits in /mnt/c/Windows/Fonts as trebuc.ttf, outside
+    # FONT_FILES, and fontconfig cannot see it, so it used to be measured in DejaVu Sans.
+    from PIL import ImageFont
+    for path in textfit._font_index().values():
+        if path.lower().endswith(".ttf"):
+            family, style = ImageFont.truetype(path, 10).getname()
+            if family and family.lower() not in textfit.FONT_FILES and style.lower() == "regular":
+                break
+    else:
+        pytest.skip("no unlisted regular .ttf font installed")
+    opaque = tmp_path / "zq81.ttf"
+    shutil.copy(path, opaque)
+    monkeypatch.setattr(textfit, "FONT_DIRS", [str(tmp_path)])
+    monkeypatch.setattr(textfit, "_fc_match", lambda query: None)
+    _clear_font_caches()
+    try:
+        assert textfit.font_file(family) == (str(opaque), True)
+        assert textfit.font_file(family, bold=True) == (str(opaque), True)
+    finally:
+        monkeypatch.undo()
+        _clear_font_caches()
+
+
 # -- measured in PowerPoint (opt-in) ------------------------------------------
 
 

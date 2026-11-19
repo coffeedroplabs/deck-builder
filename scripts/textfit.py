@@ -69,6 +69,45 @@ def _font_index():
     return index
 
 
+# Names fonts give their upright and slanted faces, per style slot.
+STYLE_NAMES = {
+    "regular": ("regular", "normal", "roman", "book"),
+    "bold": ("bold",),
+    "italic": ("italic", "oblique"),
+    "bold:italic": ("bold italic", "bold oblique"),
+}
+
+
+@lru_cache(maxsize=None)
+def _family_index():
+    """(lowercase family, lowercase style) -> path, read from each font's own
+    name table. Template fonts outside FONT_FILES (Trebuchet MS, Segoe UI)
+    live in the Windows fonts folder, which fontconfig cannot see from WSL;
+    without this they were measured in DejaVu Sans, about 9% wider, so their
+    text shrank a step it did not need. Slow (seconds over /mnt/c), so it is
+    built only when a family is missing everywhere else."""
+    index = {}
+    for path in _font_index().values():
+        try:
+            # Not _load: its cache would keep every installed face open.
+            family, style = ImageFont.truetype(path, 10).getname()
+        except (OSError, ValueError):
+            continue
+        if family and style:
+            index.setdefault((family.lower(), style.lower()), path)
+    return index
+
+
+def _from_family_index(name, style):
+    index = _family_index()
+    for wanted in (style, "regular"):
+        for label in STYLE_NAMES[wanted]:
+            path = index.get((name, label))
+            if path:
+                return path
+    return None
+
+
 def _fc_match(query):
     """Ask fontconfig for a <file, families> pair; None when fontconfig is absent or silent."""
     if not shutil.which("fc-match"):
@@ -107,13 +146,14 @@ def font_file(family, bold=False, italic=False):
             return (path, True)
 
     match = _fc_match(f"{family}:{style}")
-    if not match:
-        return (None, False)
-    path, families = match
+    path, families = match if match else (None, [])
+    if path and os.path.exists(path) and any(f.lower() == name for f in families):
+        return (path, True)
+    found = _from_family_index(name, style)
+    if found:
+        return (found, True)
     if not path or not os.path.exists(path):
         return (None, False)
-    if any(f.lower() == name for f in families):
-        return (path, True)
     substitute = SUBSTITUTES.get(name)
     if substitute:
         alt = _fc_match(f"{substitute}:{style}")
