@@ -171,7 +171,9 @@ it does, one of them is usually a comparison (`two-column`), a sequence
 - Prefer one series. Several series in a talk are hard to read from the back;
   split them across slides or move the extra series to the notes.
 - Keep categories short: the build refuses labels that collide, and the fix
-  is shorter names or a `bar` chart, not smaller type.
+  is shorter names or a `bar` chart, not smaller type. The same goes for
+  value labels on clustered columns: with two or more series, let the axis
+  carry the scale.
 - Pick the `number_format` the audience reads naturally: `0%` for shares,
   `$#,##0.0,,"M"` for millions, in the material's currency (`"A$"`, `"£"`), so
   the chart and its title show the same figure the same way.

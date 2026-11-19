@@ -12,6 +12,7 @@ import re
 
 from PIL import Image
 
+import numfmt
 import textfit
 import themes
 
@@ -330,6 +331,7 @@ class Planner:
             els.append(self.side_bullets(slide, text_box))
         size = self.prof["sizes"]["chart"][0]
         self.check_categories(slide["chart"], chart_box, size)
+        self.check_value_labels(slide["chart"], chart_box, size)
         chart = {"kind": "chart", "name": "Chart", "box": chart_box, "chart": slide["chart"], "size": size}
         room = self.end_label_room(slide["chart"], chart_box, size)
         if room:
@@ -384,6 +386,37 @@ class Planner:
                              f"category {c!r} does not fit its {slot:.0f} pt slot at {size} pt; use a bar "
                              "chart for long names, or shorten them")
                 return
+
+    def check_value_labels(self, chart, box, size):
+        """Value labels sit centred past the end of each column or bar.
+
+        Columns of one cluster touch, so with two or more series a label wider
+        than its column runs into its neighbour's; with one series the labels
+        are a category apart. Bars stack the same way down the chart's height.
+        """
+        ctype = chart["type"]
+        series = chart["series"]
+        if ctype not in ("column", "bar") or not chart.get("labels", len(series) == 1):
+            return
+        values = [v for s in series for v in s["values"] if v is not None]
+        if not values:
+            return
+        length = pt(box[2]) if ctype == "column" else pt(box[3])
+        band = length * 0.9 / len(chart["categories"])
+        apart = band if len(series) == 1 else band / (len(series) + themes.GAP_WIDTH / 100)
+        fmt = chart.get("number_format")
+        family = self.fonts["minor"]
+        widest = max((numfmt.format_number(v, fmt) for v in values),
+                     key=lambda t: textfit.text_width_pt(t, family, size))
+        need = (textfit.text_width_pt(widest, family, size) if ctype == "column"
+                else size * textfit.LINE_HEIGHT)
+        if need > apart * 0.95:
+            across = "columns" if ctype == "column" else "bars"
+            self.problem("value-labels-collide", "chart.labels",
+                         f"value labels such as {widest!r} need {need:.0f} pt but sit on {across} {apart:.0f} pt "
+                         f"apart at {size} pt, so neighbours touch; set \"labels\": false so the axis carries "
+                         "the scale, use a shorter number_format (thousands as \"k\", millions as \"m\"), "
+                         "or show fewer series or categories")
 
     def plan_table(self, slide, body):
         table = slide["table"]

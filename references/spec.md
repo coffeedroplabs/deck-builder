@@ -138,6 +138,11 @@ chart, which then takes 62% of the width).
   column charts with several series keep a legend at the top.
 - The build refuses category labels that would collide at the profile's chart
   size: use `bar` instead of `column` for long names, or shorten them.
+- It also refuses value labels wider than the room their marks leave
+  (`value-labels-collide`). Columns in one cluster touch, so two series of
+  six months with labels like "A$640k" collide. Set `"labels": false` so the
+  axis carries the scale (usual for actual against plan), use a shorter
+  `number_format`, or show fewer series or categories.
 
 ### `table`
 `title`, `table`, `source`.

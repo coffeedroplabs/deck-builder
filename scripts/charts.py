@@ -16,6 +16,7 @@ from pptx.util import Pt
 
 import ooxml
 import themes
+from numfmt import first_section, format_number
 
 SCHEME = {m.xml_value: m for m in MSO_THEME_COLOR if m.xml_value}
 ROLE = {role: SCHEME[val] for role, val in themes.ROLE_SCHEME.items()}
@@ -34,7 +35,6 @@ TYPE_NAME = {
     "stacked-column": "Stacked column chart", "line": "Line chart", "pie": "Pie chart",
     "waterfall": "Waterfall chart", "scatter": "Scatter chart",
 }
-GAP_WIDTH = 60
 LINE_WIDTH_PT = 2.5
 MARKER_SIZE = 7
 ALT_MAX_POINTS = 16
@@ -43,68 +43,9 @@ WATERFALL_LABEL_ROOM = 0.12
 PLOT_TOP = 0.03  # a manual plot area's top and bottom inset, as PowerPoint's own layout leaves
 
 
-# -- number formats -----------------------------------------------------------
-
-def _first_section(fmt):
-    out, quoted = [], False
-    for ch in fmt:
-        if ch == '"':
-            quoted = not quoted
-        if ch == ";" and not quoted:
-            break
-        out.append(ch)
-    return "".join(out)
-
-
-def _tokens(section):
-    """(is_literal, text) pieces of one number-format section."""
-    out, i = [], 0
-    while i < len(section):
-        ch = section[i]
-        if ch == '"':
-            end = section.find('"', i + 1)
-            end = len(section) if end < 0 else end
-            out.append((True, section[i + 1:end]))
-            i = end + 1
-        elif ch == "\\" and i + 1 < len(section):
-            out.append((True, section[i + 1]))
-            i += 2
-        else:
-            out.append((False, ch))
-            i += 1
-    return out
-
-
-def format_number(value, fmt):
-    """Render a value the way PowerPoint will show it, for alt text and labels.
-
-    Covers what decks use: literal prefixes and suffixes, decimals, thousands
-    separators, percent and trailing-comma scaling. Dates and conditional
-    sections are out of scope; they fall back to plain numbers.
-    """
-    if not fmt or fmt.strip().lower() == "general":
-        return f"{value:,.10g}" if abs(value) >= 10000 else f"{value:.10g}"
-    toks = _tokens(_first_section(fmt))
-    code = [k for k, (lit, t) in enumerate(toks) if not lit and t in "0#?"]
-    if not code:
-        return f"{value:g}"
-    first, last = code[0], code[-1]
-    prefix = "".join(t for _, t in toks[:first])
-    middle = "".join(t for _, t in toks[first:last + 1])
-    tail = toks[last + 1:]
-    scale = sum(1 for lit, t in tail if not lit and t == ",")
-    suffix = "".join(t for lit, t in tail if lit or t != ",")
-    percent = any(not lit and t == "%" for lit, t in toks)
-    decimals = len(middle.split(".", 1)[1]) if "." in middle else 0
-    v = value * (100 if percent else 1) / (1000 ** scale)
-    body = f"{abs(v):,.{decimals}f}" if "," in middle.split(".")[0] else f"{abs(v):.{decimals}f}"
-    negative = v < 0 and float(body.replace(",", "")) != 0
-    return ("-" if negative else "") + prefix + body + suffix
-
-
 def _signed(fmt, sign):
     """A one-section format that always shows `sign`, for waterfall rises and falls."""
-    return sign + _first_section(fmt or "General").replace("General", "0")
+    return sign + first_section(fmt or "General").replace("General", "0")
 
 
 # -- styling helpers ----------------------------------------------------------
@@ -234,7 +175,7 @@ def waterfall_series(categories, values, totals):
 def _build_bar_like(chart, spec, size, colors):
     ctype = spec["type"]
     plot = chart.plots[0]
-    plot.gap_width = GAP_WIDTH
+    plot.gap_width = themes.GAP_WIDTH
     plot.vary_by_categories = False
     series = spec["series"]
     single = len(series) == 1
@@ -336,7 +277,7 @@ def _build_pie(chart, spec, size, colors):
 
 def _build_waterfall(chart, spec, size, colors):
     plot = chart.plots[0]
-    plot.gap_width = GAP_WIDTH
+    plot.gap_width = themes.GAP_WIDTH
     plot.overlap = 100
     plot.vary_by_categories = False
     fmt = spec.get("number_format") or "General"
@@ -350,7 +291,7 @@ def _build_waterfall(chart, spec, size, colors):
             _fill(s.format, fills[name])
     total = by_name["Total"]
     total.data_labels.show_value = True
-    total.data_labels.number_format = _first_section(fmt)
+    total.data_labels.number_format = first_section(fmt)
     total.data_labels.number_format_is_linked = False
     total.data_labels.position = XL_LABEL_POSITION.INSIDE_END
     _font(total.data_labels.font, size, _readable_on(colors["series"], colors), bold=True)

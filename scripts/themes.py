@@ -74,6 +74,9 @@ CONTRAST = {"text": 4.5, "large": 3.0, "nontext": 3.0, "strict": 7.0}
 MAX_FONT_FAMILIES = 2
 MAX_SAME_LAYOUT_RUN = 2
 MAX_BIG_NUMBERS = 2
+# Gap between column clusters, as a percent of one column's width. Layout
+# measures value labels against the column width this leaves.
+GAP_WIDTH = 60
 SAFE_MARGIN = 0.05  # fraction of slide width/height; a synthesis, so a warning only
 
 # Fonts whose metrics match on Windows, Mac and the metric-compatible Linux

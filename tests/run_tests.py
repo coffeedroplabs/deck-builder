@@ -30,6 +30,7 @@ import charts  # noqa: E402
 import check_story  # noqa: E402
 import inspect_template  # noqa: E402
 import lint_deck  # noqa: E402
+import numfmt  # noqa: E402
 import ooxml  # noqa: E402
 import render  # noqa: E402
 import spec_check  # noqa: E402
@@ -251,7 +252,7 @@ def test_scatter_with_axes_is_accepted(deck_dir):
     (0.5, "General", "0.5"),
 ])
 def test_format_number(value, fmt, shown):
-    assert charts.format_number(value, fmt) == shown
+    assert numfmt.format_number(value, fmt) == shown
 
 
 def _line_slide(spec, names):
@@ -308,6 +309,26 @@ def test_a_year_of_months_fits_a_line_but_not_a_column(deck_dir):
     assert result["passed"], result["errors"]
     chart["type"] = "column"
     assert "too-many-categories" in codes(spec_check.errors(spec_check.check_spec(spec, str(deck_dir))))
+
+
+def test_value_labels_on_clustered_columns_must_fit_their_column(deck_dir):
+    # The board-pack case: two series of six months, labelled in thousands of dollars.
+    spec = canary()
+    chart = {"type": "column", "categories": MONTHS[:6], "number_format": '"A$"#,##0,"k"', "labels": True,
+             "series": [{"name": "Revenue", "values": [640000, 655000, 690000, 700000, 745000, 770000]},
+                        {"name": "Plan", "values": [700000, 720000, 750000, 780000, 810000, 840000]}]}
+    spec["slides"][slide_index(spec, "chart", "column")]["chart"] = chart
+
+    def problems():
+        return codes(build_deck.build(write_spec(deck_dir, spec), str(deck_dir / "deck.pptx"),
+                                      check_only=True)["problems"])
+
+    assert "value-labels-collide" in problems()
+    chart["labels"] = False
+    assert "value-labels-collide" not in problems()
+    chart["labels"] = True
+    chart["series"].pop()
+    assert "value-labels-collide" not in problems()
 
 
 def test_waterfall_series_floats_changes_on_the_running_total():
