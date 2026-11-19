@@ -102,6 +102,11 @@ def open_deck(spec, spec_dir):
             if part and frame[part] is None:
                 frame[part] = _box(ph)
                 frame[f"{part}_align"], frame[f"{part}_anchor"] = ooxml.placeholder_text_style(ph, lay.slide_master)
+        for kind, part in (("ftr", "footer"), ("sldNum", "number")):
+            ph = ooxml.footer_placeholders(lay).get(kind)
+            if ph is not None:
+                frame[part] = _box(ph)
+                frame[f"{part}_align"], frame[f"{part}_anchor"] = ooxml.placeholder_text_style(ph, lay.slide_master)
         frames[name] = frame
     return prs, (lambda name: chosen.get(name)), frames, _template_title_bold(prs), problems
 
@@ -162,9 +167,9 @@ def draw_slide_number(slide, el, number):
     shape = slide.shapes.add_textbox(*el["box"])
     shape.name = el["name"]
     tf = shape.text_frame
-    _prepare_frame(tf, "b")
+    _prepare_frame(tf, el["anchor"])
     para = tf.paragraphs[0]
-    ooxml.set_paragraph(para, align="r")
+    ooxml.set_paragraph(para, align=el["align"])
     r_pr = ooxml.add_slide_number(para, number)
     ooxml.style_run_props(r_pr, size_pt=el["size"], color="tx2", font_ref="+mn-lt")
 

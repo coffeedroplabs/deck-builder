@@ -51,7 +51,8 @@ def _overlaps(a, b):
 
 
 def build_regions(lay, slide_w, slide_h):
-    """Where the builder will draw on this layout: the frames open_deck takes, and its footer row."""
+    """Where the builder will draw on this layout: the frames open_deck takes,
+    including the footer placeholders, else the default grid's footer boxes."""
     regions = {}
     for ph in lay.placeholders:
         kind = ph._element.ph.get("type", "obj")
@@ -60,9 +61,18 @@ def build_regions(lay, slide_w, slide_h):
         elif kind in build_deck.BODY_PLACEHOLDERS:
             regions.setdefault("body placeholder", (ph.left, ph.top, ph.width, ph.height))
     sx, sy = slide_w / themes.SLIDE_W, slide_h / themes.SLIDE_H
-    regions["footer row (source line and slide number)"] = tuple(
-        int(v * themes.EMU_PER_INCH * f) for v, f in
-        ((layout.MARGIN_IN, sx), (layout.FOOTER_Y_IN, sy), (layout.CONTENT_W_IN, sx), (layout.FOOTER_H_IN, sy)))
+    grid = {"ftr": (layout.MARGIN_IN, layout.SOURCE_W_IN),
+            "sldNum": (layout.MARGIN_IN + layout.CONTENT_W_IN - layout.NUMBER_W_IN, layout.NUMBER_W_IN)}
+    found = ooxml.footer_placeholders(lay)
+    for kind, label in (("ftr", "source line"), ("sldNum", "slide number")):
+        ph = found.get(kind)
+        if ph is not None:
+            regions[f"footer placeholder ({label})"] = (ph.left, ph.top, ph.width, ph.height)
+        else:
+            x, w = grid[kind]
+            regions[f"footer row ({label})"] = tuple(
+                int(v * themes.EMU_PER_INCH * f) for v, f in
+                ((x, sx), (layout.FOOTER_Y_IN, sy), (w, sx), (layout.FOOTER_H_IN, sy)))
     return regions
 
 
@@ -164,7 +174,8 @@ def inspect(path):
     for name in sorted(set(mapping.values())):
         lay = next(lay for lay in prs.slide_layouts if lay.name == name)
         for region, (x, y, rw, rh) in build_regions(lay, w, h).items():
-            if region.startswith("footer"):
+            # The default grid's footer row is the builder's, not the designer's.
+            if region.startswith("footer row"):
                 continue
             if x < mx or y < my or x + rw > w - mx or y + rh > h - my:
                 add("warning", "template-safe-area",

@@ -63,7 +63,8 @@ def box_w_pt(box):
 
 class Planner:
     """Plans slides for one deck. `frames` maps a layout to template geometry
-    ({"title": box or None, "body": box or None}) in template mode."""
+    ({"title": box or None, "body": box or None}, plus "footer" and "number"
+    when the template has those placeholders) in template mode."""
 
     def __init__(self, prof, fonts, title_bold, slide_w, slide_h, spec_dir=".",
                  frames=None, slide_numbers=True):
@@ -487,14 +488,27 @@ class Planner:
         groups = self.fit_group(items, "body2", "small")
         return [self.text_el(f"Step {i}", box, paras) for i, ((_, box, _), paras) in enumerate(zip(items, groups), 1)]
 
+    def footer_slot(self, layout, part, default_box, default_align):
+        """(box, align, anchor) for the source line or slide number. A
+        template's own footer placeholders are placed clear of its footer
+        logo; the default grid's row is not."""
+        tmpl = self.frames.get(layout) or {}
+        if tmpl.get(part):
+            return tmpl[part], tmpl[f"{part}_align"], tmpl[f"{part}_anchor"]
+        return default_box, default_align, "b"
+
     def footer(self, slide, layout):
         els = []
         if slide.get("source"):
-            box = self.box(MARGIN_IN, FOOTER_Y_IN, SOURCE_W_IN, FOOTER_H_IN)
+            box, align, anchor = self.footer_slot(
+                layout, "footer", self.box(MARGIN_IN, FOOTER_Y_IN, SOURCE_W_IN, FOOTER_H_IN), "l")
             els.append(self.simple("Source", "source", box, slide["source"], "source", color="tx2",
-                                   anchor="b", max_lines=1))
+                                   align=align, anchor=anchor, max_lines=1))
         if self.slide_numbers and layout != "cover":
-            box = self.box(MARGIN_IN + CONTENT_W_IN - NUMBER_W_IN, FOOTER_Y_IN, NUMBER_W_IN, FOOTER_H_IN)
+            box, align, anchor = self.footer_slot(
+                layout, "number",
+                self.box(MARGIN_IN + CONTENT_W_IN - NUMBER_W_IN, FOOTER_Y_IN, NUMBER_W_IN, FOOTER_H_IN), "r")
             size = self.prof["sizes"]["source"][0]
-            els.append({"kind": "slidenum", "name": "Slide number", "box": box, "size": size})
+            els.append({"kind": "slidenum", "name": "Slide number", "box": box, "size": size,
+                        "align": align, "anchor": anchor})
         return els

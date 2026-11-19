@@ -209,6 +209,18 @@ def placeholder_text_style(ph, master):
     return {"ctr": "ctr", "r": "r"}.get(align, "l"), {"ctr": "m", "b": "b"}.get(anchor, "t")
 
 
+def footer_placeholders(layout):
+    """{"ftr": placeholder, "sldNum": placeholder} for a layout, taking the
+    master's for any the layout leaves out: they still mark where the
+    designer wants footer text, clear of the master's own art."""
+    found = {}
+    for ph in list(layout.placeholders) + list(layout.slide_master.placeholders):
+        kind = ph._element.ph.get("type")
+        if kind in ("ftr", "sldNum") and kind not in found and None not in (ph.left, ph.top, ph.width, ph.height):
+            found[kind] = ph
+    return found
+
+
 def scale_master(prs, sx, sy):
     # The default template is 4:3; widening only the slide would leave the
     # master's placeholders, and every slide a user adds later, squeezed left.

@@ -86,9 +86,14 @@ template's layouts by name:
 - **Statement slides** keep the template's title column (its left edge and
   width) so they line up with the other slides, but are centred vertically as
   in the default grid, because templates have no statement layout.
-- **Footer row**: the source line and slide number go in the default grid's
-  footer row, scaled to the slide. The template's own footer, date and
-  slide-number placeholders are not used.
+- **Footer**: the source line goes in the area of the layout's footer
+  placeholder and the slide number in the area of its slide-number
+  placeholder, with their alignment and anchor, because the designer placed
+  those clear of any footer logo. A layout without them takes the master's;
+  a template without them uses the default grid's footer row, scaled to the
+  slide. The date placeholder is not used. A footer area narrower than the
+  default grid's leaves less room for the source line, so a long one fails
+  with `source-long`: shorten it.
 - **Font sizes stay the profile's.** The template decides the typeface; the
   profile decides the sizes and floors, so a template with 14 pt body text
   still gets profile-sized text in a `live` deck.

@@ -91,12 +91,18 @@ class Lint:
         for n, slide in enumerate(self.prs.slides, 1):
             bg = ooxml.slide_background_hex(slide, self.info)
             boxes = []
+            footer_boxes = [(ph.left, ph.top, ph.width, ph.height)
+                            for ph in ooxml.footer_placeholders(slide.slide_layout).values()]
             for shape in slide.shapes:
                 name = shape.name
                 box = (shape.left, shape.top, shape.width, shape.height)
                 if None not in box:
                     boxes.append((name, box))
-                    self._check_geometry(n, name, box, _at_template_position(shape, box))
+                    # The source line and slide number fill the template's
+                    # footer placeholders' boxes, which its designer placed.
+                    owned = _at_template_position(shape, box) or (
+                        name in SMALL_TEXT_SHAPES and any(_same_box(box, f) for f in footer_boxes))
+                    self._check_geometry(n, name, box, owned)
                 el = shape._element
                 if el.tag in (qn("p:pic"), qn("p:graphicFrame")) and not ooxml.alt_text(el):
                     self.add("error", "alt-missing", n, name,
@@ -304,7 +310,11 @@ def _at_template_position(shape, box):
     if base is None:
         return False
     base_box = (base.left, base.top, base.width, base.height)
-    return None not in base_box and all(abs(a - b) <= TOL_EMU for a, b in zip(box, base_box))
+    return None not in base_box and _same_box(box, base_box)
+
+
+def _same_box(a, b):
+    return all(abs(p - q) <= TOL_EMU for p, q in zip(a, b))
 
 
 def _title_shape(slide):

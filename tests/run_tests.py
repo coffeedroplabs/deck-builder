@@ -371,7 +371,8 @@ def test_approve_requires_who_approved(tmp_path):
 def templates(tmp_path_factory):
     folder = tmp_path_factory.mktemp("templates")
     return {"brand": make_template(str(folder / "brand.pptx")),
-            "brand-bad": make_template(str(folder / "brand-bad.pptx"), logo_over_title=True)}
+            "brand-bad": make_template(str(folder / "brand-bad.pptx"), logo_over_title=True),
+            "brand-footer": make_template(str(folder / "brand-footer.pptx"), footer_logo=True)}
 
 
 def test_inspector_accepts_the_brand_template(templates):
@@ -411,6 +412,23 @@ def test_template_canary_passes_the_gate(deck_dir, templates):
 def test_titles_covering_the_logo_fail_the_gate(deck_dir, templates):
     _, result = build_and_lint(deck_dir, template_spec(deck_dir, templates["brand-bad"]))
     assert "covers-template-art" in codes(result["errors"])
+
+
+def test_the_footer_fills_the_templates_footer_placeholders(deck_dir, templates):
+    _, result = build_and_lint(deck_dir, template_spec(deck_dir, templates["brand-footer"]))
+    assert result["passed"], result["errors"]
+    prs = ooxml.open_presentation(str(deck_dir / "deck.pptx"))
+    checked = set()
+    for slide in prs.slides:
+        wanted = {name: ooxml.footer_placeholders(slide.slide_layout)[kind]
+                  for name, kind in (("Source", "ftr"), ("Slide number", "sldNum"))}
+        for shape in slide.shapes:
+            if shape.name in wanted:
+                ph = wanted[shape.name]
+                assert (shape.left, shape.top, shape.width, shape.height) == (ph.left, ph.top, ph.width, ph.height)
+                checked.add(shape.name)
+    assert checked == {"Source", "Slide number"}
+    assert "template-art" not in codes(inspect_template.inspect(templates["brand-footer"])["problems"])
 
 
 def test_a_changed_template_is_refused(deck_dir, templates):
