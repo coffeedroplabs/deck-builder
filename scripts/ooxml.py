@@ -104,9 +104,9 @@ def _apply_mods(hex6, elem):
         tag = etree.QName(mod).localname
         v = int(mod.get("val", "100000")) / 100000
         if tag in ("lumMod", "lumOff"):
-            h, l, s = colorsys.rgb_to_hls(r, g, b)
-            l = l * v if tag == "lumMod" else l + v
-            r, g, b = colorsys.hls_to_rgb(h, min(1.0, max(0.0, l)), s)
+            h, light, s = colorsys.rgb_to_hls(r, g, b)
+            light = light * v if tag == "lumMod" else light + v
+            r, g, b = colorsys.hls_to_rgb(h, min(1.0, max(0.0, light)), s)
         elif tag == "tint":
             r, g, b = (c + (1 - c) * (1 - v) for c in (r, g, b))
         elif tag == "shade":

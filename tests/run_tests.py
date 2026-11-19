@@ -137,6 +137,16 @@ def test_build_crash_leaves_a_failed_report(deck_dir):
     assert report["built"] is False and report["crash"]
 
 
+def test_a_wrong_path_fails_cleanly(deck_dir, capsys):
+    missing = str(deck_dir / "missing.json")
+    assert build_deck.main([missing, "--check-only"]) == 2
+    assert lint_deck.main([str(deck_dir / "missing.pptx"), "--spec", missing]) == 2
+    assert render.main([str(deck_dir / "missing.pptx"), "-o", str(deck_dir / "render")]) == 2
+    err = capsys.readouterr().err
+    assert "Traceback" not in err
+    assert f"Cannot read {missing}" in err and "missing.pptx" in err
+
+
 # -- spec problems the build refuses ------------------------------------------
 
 

@@ -20,7 +20,6 @@ import hashlib
 import json
 import os
 import sys
-import traceback
 from datetime import datetime, timezone
 
 from pptx import Presentation
@@ -398,14 +397,18 @@ def main(argv=None):
     out = args.out or os.path.join(os.path.dirname(os.path.abspath(args.deck)), "gate_result.json")
     try:
         result = lint(args.deck, args.spec, args.measure, args.approval)
-    except Exception:  # a crash must leave a failed verdict, never a stale passing one
+    except Exception as e:  # a crash must leave a failed verdict, never a stale passing one
+        crash = spec_check.crash_message(e)
         result = {"tool": TOOL, "version": themes.VERSION, "deck": os.path.abspath(args.deck),
                   "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                  "passed": False, "errors": [], "warnings": [], "crash": traceback.format_exc()}
-        with open(out, "w", encoding="utf-8") as f:
-            json.dump(result, f, indent=2)
-        print(result["crash"], file=sys.stderr)
-        print(f"CRASHED. {out} records passed: false.")
+                  "passed": False, "errors": [], "warnings": [], "crash": crash}
+        print(crash, file=sys.stderr)
+        try:
+            with open(out, "w", encoding="utf-8") as f:
+                json.dump(result, f, indent=2)
+            print(f"NOT CHECKED. {out} records passed: false.")
+        except OSError as write_error:
+            print(f"NOT CHECKED, and the verdict could not be written: {write_error}")
         return 2
     with open(out, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2, ensure_ascii=False)

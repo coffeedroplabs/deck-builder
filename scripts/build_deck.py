@@ -18,7 +18,6 @@ import hashlib
 import json
 import os
 import sys
-import traceback
 from datetime import datetime, timezone
 
 from pptx import Presentation
@@ -322,12 +321,16 @@ def main(argv=None):
     report_path = args.report or os.path.join(os.path.dirname(os.path.abspath(anchor)), "build_report.json")
     try:
         report = build(args.spec, args.out, args.check_only)
-    except Exception:  # a crash must still leave a report that says the build failed
+    except Exception as e:  # a crash must still leave a report that says the build failed
+        crash = spec_check.crash_message(e)
         report = {"tool": "deck-builder build_deck", "version": themes.VERSION, "built": False,
-                  "crash": traceback.format_exc(), "problems": []}
-        with open(report_path, "w", encoding="utf-8") as f:
-            json.dump(report, f, indent=2)
-        print(report["crash"], file=sys.stderr)
+                  "crash": crash, "problems": []}
+        print(crash, file=sys.stderr)
+        try:
+            with open(report_path, "w", encoding="utf-8") as f:
+                json.dump(report, f, indent=2)
+        except OSError as write_error:
+            print(f"The build report could not be written either: {write_error}", file=sys.stderr)
         return 2
     with open(report_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)

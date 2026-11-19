@@ -246,7 +246,7 @@ def main(argv=None):
     args = ap.parse_args(argv)
     try:
         measure = render(args.deck, args.out, args.backend, args.width, args.timeout)
-    except (RuntimeError, subprocess.TimeoutExpired) as e:
+    except (RuntimeError, OSError, subprocess.TimeoutExpired) as e:
         print(f"RENDER FAILED: {e}", file=sys.stderr)
         return 2
     n = len(glob.glob(os.path.join(args.out, "slide-*.png")))

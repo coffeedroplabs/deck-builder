@@ -6,6 +6,7 @@ reported and must be read, but a deck may ship with them.
 """
 
 import os
+import traceback
 
 import rules
 import themes
@@ -495,6 +496,14 @@ def check_spec(spec, spec_dir="."):
 
 def errors(problems):
     return [p for p in problems if p["severity"] == "error"]
+
+
+def crash_message(e):
+    """What a script prints, and records, when it stops on an exception."""
+    # A wrong path is the usual cause and needs no traceback to fix.
+    if isinstance(e, FileNotFoundError):
+        return f"Cannot read {e.filename}: {e.strerror}"
+    return traceback.format_exc()
 
 
 def format_problem(p):
