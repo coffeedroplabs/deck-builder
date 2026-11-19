@@ -40,6 +40,14 @@ file in the deck folder (`review/blind-reader.json`,
 `review/critic-argument.json` and so on) as well as return them, so the
 findings survive a lost session.
 
+If you cannot spawn agents (the host has no Agent tool, or you are yourself
+running as a sub-agent without one), the review cannot be independent, but do
+not skip it. Do the blind read first: look only at the slide pictures and
+write down the argument and the ask before you re-read the brief or the spec.
+Then take each critic lens from `agents/critic.md` in turn, write the findings
+to the same files, and tell the user it was a self-review, which misses more
+than an independent one.
+
 ## Findings
 
 Every reviewer returns findings in one shape, so you can triage them
