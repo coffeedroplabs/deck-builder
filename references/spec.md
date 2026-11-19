@@ -101,7 +101,9 @@ chart, which then takes 62% of the width).
   (`labels-unsupported`): pies label each slice with its name and value,
   waterfalls label every bar, stacked and scatter charts keep the axis.
 - `number_format`: Excel format code for labels and axis, such as `0%`,
-  `0.0%`, `#,##0`, `$#,##0`, `$#,##0.0,,"M"`.
+  `0.0%`, `#,##0`, `$#,##0`, `$#,##0.0,,"M"`. Write the currency the way the
+  slide text does: if the titles say A$, use `"A$"#,##0.0,,"m"`, or the chart
+  shows "$5.90m" beside a title that says "A$5.90m".
 - `waterfall`: one series of changes; list the bars that are totals (drawn from
   zero) in `"totals": ["2025", "2026"]`, by category name. Rises take the
   accent, falls the third colour, totals the muted colour, so `highlight` is
@@ -116,6 +118,15 @@ chart, which then takes 62% of the width).
   `highlight` names a series; several series get a legend.
 - Series per chart: one for `pie` and `waterfall`; otherwise the profile's
   cap (3 for `live` and `pitch`, 4 for `read-ahead`).
+- Categories per chart: the profile's cap (8 for `live`, 10 for `pitch`, 14
+  for `read-ahead`, `too-many-categories`), except `line`, which is limited
+  only by labels that collide. Never drop points to get under the cap: group a
+  ranking's tail into "Other", or show a time series as a `line` or in coarser
+  periods (quarters instead of months).
+- A target, plan or threshold: add it as a second `line` series with the same
+  value in every category, named for what it is ("SLA 4 h", "Plan"), and
+  `highlight` the actual series so the target stays muted. The name at the
+  line end labels it, so it needs no legend.
 - `alt`: alt text. When omitted the builder writes one from the data ("Column
   chart: Churn rate by month. Jul 4.1%, Aug 3.8%, Sep 2.9%."), which is usually
   better than a hand-written summary because it carries the numbers.

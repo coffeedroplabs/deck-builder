@@ -278,7 +278,8 @@ class Lint:
             texts = [t for t in _as_list(m.get("line_texts")) if t and t.strip()]
             if len(texts) >= 2 and rules.word_count(texts[-1]) == 1:
                 self.add("warning", "title-widow", n, name,
-                         f"the title's last line is one word ({texts[-1].strip()!r}); reword so the lines balance")
+                         f"the title's last line is one word ({texts[-1].strip()!r}); cut words until it fits "
+                         "one line or the lines balance (cutting never trips title-long, padding can)")
 
     # -- the outline the user approved -------------------------------------------
 

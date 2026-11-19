@@ -98,7 +98,8 @@ The checks behind this:
 - `title-topic`: the title is a known topic label ("Overview", "Results") or
   three words or fewer without a figure.
 - `title-long`, `title-lines`, `title-widow`: too many words, more than two
-  lines, or a last line of one short word, measured at the title's real size.
+  lines, or a last line of one word, measured at the title's real size. Fix a
+  widow by cutting words, not adding them.
 - `count-mismatch`: a title that promises "three reasons" must have three
   bullets, steps or rows.
 - `duplicate-title` and `title-near-duplicate`: two slides making the same
@@ -116,7 +117,10 @@ easily: a round "40% faster" fills a gap that the material did not.
   from your own knowledge without saying where it is from and checking it.
 - Charts, tables and big numbers need a `source`, and so does any slide whose
   text contains a quantity (money, a percentage, a multiplier, a decimal or a
-  figure in thousands). The gate warns `number-unsourced`.
+  figure in thousands). The gate warns `number-unsourced`. It does not catch
+  plain counts and durations ("5 stores for 12 weeks", "38 stores"), so give
+  those a source too when they come from the material and not from the
+  proposal itself.
 - Write the source as a reader would check it: "Source: Stripe export, Jul to
   Sep 2026", not "Source: internal data".
 - When the material has no number for a claim, the claim goes or becomes
@@ -169,7 +173,12 @@ it does, one of them is usually a comparison (`two-column`), a sequence
 - Keep categories short: the build refuses labels that collide, and the fix
   is shorter names or a `bar` chart, not smaller type.
 - Pick the `number_format` the audience reads naturally: `0%` for shares,
-  `$#,##0.0,,"M"` for millions.
+  `$#,##0.0,,"M"` for millions, in the material's currency (`"A$"`, `"£"`), so
+  the chart and its title show the same figure the same way.
+- Show every point the material has. A month left off a trend to get under a
+  category cap is a gap the audience will notice, or worse, will not.
+- A target or plan is a muted second line (see `spec.md`), so the gap between
+  actual and target is the thing the eye lands on.
 
 ## 7. Colour and type
 
