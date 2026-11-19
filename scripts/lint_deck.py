@@ -96,7 +96,7 @@ class Lint:
                 box = (shape.left, shape.top, shape.width, shape.height)
                 if None not in box:
                     boxes.append((name, box))
-                    self._check_geometry(n, name, box)
+                    self._check_geometry(n, name, box, _at_template_position(shape, box))
                 el = shape._element
                 if el.tag in (qn("p:pic"), qn("p:graphicFrame")) and not ooxml.alt_text(el):
                     self.add("error", "alt-missing", n, name,
@@ -109,6 +109,7 @@ class Lint:
                 if getattr(shape, "has_chart", False) and shape.has_chart:
                     families |= self._check_chart_text(n, name, shape.chart)
             self._check_overlap(n, boxes)
+            self._check_template_art(n, slide, boxes)
             self._check_notes(n, slide)
         if len(families) > themes.MAX_FONT_FAMILIES:
             self.add("error", "too-many-fonts", None, "",
@@ -165,10 +166,14 @@ class Lint:
                     families.add(self._family(latin.get("typeface")))
         return families
 
-    def _check_geometry(self, n, name, box):
+    def _check_geometry(self, n, name, box, template_owned=False):
         x, y, w, h = box
         if x < -TOL_EMU or y < -TOL_EMU or x + w > self.W + TOL_EMU or y + h > self.H + TOL_EMU:
             self.add("error", "off-slide", n, name, "shape extends past the slide edge")
+            return
+        # The template's designer chose where its placeholders sit; the deck
+        # author cannot act on that, and inspect_template.py reports it once.
+        if template_owned:
             return
         mx, my = themes.SAFE_MARGIN * self.W, themes.SAFE_MARGIN * self.H
         if x < mx - TOL_EMU or y < my - TOL_EMU or x + w > self.W - mx + TOL_EMU or y + h > self.H - my + TOL_EMU:
@@ -183,6 +188,21 @@ class Lint:
                 dy = min(ay + ah, by + bh) - max(ay, by)
                 if dx > TOL_EMU and dy > TOL_EMU:
                     self.add("error", "shapes-overlap", n, f"{a} / {b}", f"{a!r} and {b!r} overlap")
+
+    def _check_template_art(self, n, slide, boxes):
+        # A template's logo or badge sits on the layout, not the slide, so the
+        # slide-level overlap check never sees it.
+        for art in ooxml.template_art(slide.slide_layout, self.W, self.H):
+            if art["background"]:
+                continue
+            ax, ay, aw, ah = art["box"]
+            for name, (bx, by, bw, bh) in boxes:
+                dx = min(ax + aw, bx + bw) - max(ax, bx)
+                dy = min(ay + ah, by + bh) - max(ay, by)
+                if dx > TOL_EMU and dy > TOL_EMU:
+                    self.add("error", "covers-template-art", n, name,
+                             f"{name!r} covers the template's {art['name']!r}; move it, or map this "
+                             "layout to one without that art")
 
     def _check_notes(self, n, slide):
         layout = self.spec["slides"][n - 1].get("layout") if n <= len(self.spec["slides"]) else None
@@ -276,6 +296,15 @@ def _as_list(v):
     if v is None:
         return []
     return v if isinstance(v, list) else [v]
+
+
+def _at_template_position(shape, box):
+    """Whether a placeholder sits exactly where its layout puts it."""
+    base = getattr(shape, "_base_placeholder", None) if shape.is_placeholder else None
+    if base is None:
+        return False
+    base_box = (base.left, base.top, base.width, base.height)
+    return None not in base_box and all(abs(a - b) <= TOL_EMU for a, b in zip(box, base_box))
 
 
 def _title_shape(slide):

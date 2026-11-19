@@ -350,6 +350,32 @@ def fingerprint(prs):
     return hashlib.sha256(json.dumps(canon, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
+# Art covering more of the slide than this is a background or a colour band,
+# which content is meant to sit on; smaller art (a logo, a badge) is meant to stay clear.
+BACKGROUND_ART_SHARE = 0.25
+
+
+def template_art(slide_layout, slide_w, slide_h):
+    """Non-placeholder shapes a template draws behind every slide of this layout.
+
+    A logo or badge here is invisible to the builder's own geometry, so the
+    inspector lists it and the lint checks slide content against it.
+    """
+    owners = [slide_layout]
+    if slide_layout._element.get("showMasterSp") not in ("0", "false"):
+        owners.append(slide_layout.slide_master)
+    art = []
+    for owner in owners:
+        for shape in owner.shapes:
+            if shape.is_placeholder or None in (shape.left, shape.top, shape.width, shape.height):
+                continue
+            share = (shape.width * shape.height) / (slide_w * slide_h)
+            art.append({"name": shape.name, "box": (shape.left, shape.top, shape.width, shape.height),
+                        "background": share > BACKGROUND_ART_SHARE,
+                        "from": "master" if owner is not slide_layout else "layout"})
+    return art
+
+
 SLIDE_PART_RE = re.compile(r"^ppt/slides/slide\d+\.xml$")
 HEX6_RE = re.compile(r"^[0-9A-Fa-f]{6}$")
 
