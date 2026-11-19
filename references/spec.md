@@ -28,6 +28,7 @@ All text is plain text: no Markdown, no HTML, no emoji.
 | `theme` | no | A preset name (`paper`, `consulting`, `ink`) or `{"base": "paper", "colors": {...}, "fonts": {"major": "...", "minor": "..."}, "title_bold": true}`. Ignored in template mode. Brand colours must come from the user or their assets, never invented; the build refuses colours that fail contrast. |
 | `template` | no | Path to a .pptx or .potx. Switches to template mode (see `template-mode.md`). |
 | `layout_map` | template mode | Maps this spec's layout names to the template's layout names. |
+| `template_fingerprint` | template mode | The hash `inspect_template.py` prints. The build refuses a template that changed since (`template-changed`). |
 | `meta` | no | Document properties. `slide_numbers` (default true) adds a slide number to every slide but the cover. |
 | `slides` | yes | One object per slide, in order. |
 
@@ -93,16 +94,28 @@ chart, which then takes 62% of the width).
   muted series colour. Without it, a single series is all accent and several
   series take accent, muted, third in order. Highlight the thing the title
   claims.
-- `labels`: data labels on the marks (default true for single-series bar,
-  column and waterfall, false otherwise). With labels on, the value axis is
-  hidden.
+- `labels`: data labels on the marks, for `bar`, `column` and `line` only
+  (default true for single-series bar and column, false otherwise). With
+  labels on, the value axis is hidden. Stacked charts, waterfalls, pies and
+  scatters set their own labels, and the build refuses `labels` on them
+  (`labels-unsupported`): pies label each slice with its name and value,
+  waterfalls label every bar, stacked and scatter charts keep the axis.
 - `number_format`: Excel format code for labels and axis, such as `0%`,
   `0.0%`, `#,##0`, `$#,##0`, `$#,##0.0,,"M"`.
 - `waterfall`: one series of changes; list the bars that are totals (drawn from
-  zero) in `"totals": ["2025", "2026"]`. Rises take the accent, falls the third
-  colour, totals the muted colour.
-- `scatter`: each series' `values` is a list of `[x, y]` pairs; `categories` is
-  omitted; `x_axis_title` and `value_axis_title` are required.
+  zero) in `"totals": ["2025", "2026"]`, by category name. Rises take the
+  accent, falls the third colour, totals the muted colour, so `highlight` is
+  refused (`highlight-unsupported`). The build checks the arithmetic: a total
+  after the first bar must equal the bars before it, within 0.5%
+  (`waterfall-mismatch`), and the running total must not go below zero
+  (`waterfall-negative`; show the changes as a bar chart instead). `totals` on
+  any other chart type is an error.
+- `scatter`: each series' `values` is a list of `[x, y]` number pairs;
+  `categories` is omitted; `x_axis_title` and `value_axis_title` are required
+  (`scatter-axes`). `x_axis_title` on any other chart type is an error.
+  `highlight` names a series; several series get a legend.
+- Series per chart: one for `pie` and `waterfall`; otherwise the profile's
+  cap (3 for `live` and `pitch`, 4 for `read-ahead`).
 - `alt`: alt text. When omitted the builder writes one from the data ("Column
   chart: Churn rate by month. Jul 4.1%, Aug 3.8%, Sep 2.9%."), which is usually
   better than a hand-written summary because it carries the numbers.
@@ -138,7 +151,8 @@ baked into it; put the words on the slide.
 ### `big-number`
 `title`, `number` (the figure as it should read: `"42%"`, `"$1.2M"`, `"3.4x"`),
 `label` (what it measures, one line), optional `context` (one comparison
-line), `source`. At most two per deck, never adjacent, never in a row of tiles:
+line), `source`. The figure is set in the body font, as chart and table
+figures are, so the same number looks the same everywhere in the deck. At most two per deck, never adjacent, never in a row of tiles:
 a grid of big numbers invites invented figures.
 
 ### `quote`
@@ -154,6 +168,26 @@ a template habit.
 `title`, `bullets` (at most 3 takeaways), optional `ask` (the decision or next
 step you want, set apart in the accent colour). The last content slide; never
 end on "Thank you" or "Questions".
+
+## Outline
+
+Before the spec, `check_story.py` checks an outline: the same top level with
+only `profile` and, per slide, `layout` and `title`.
+
+```json
+{"profile": "live",
+ "slides": [{"layout": "cover", "title": "Annual plans cut churn by two thirds"},
+            {"layout": "chart", "title": "Churn fell from 4.1% to 2.9% in the quarter annual plans launched"},
+            {"layout": "conclusion", "title": "Make annual the default plan from April"}]}
+```
+
+`check_story.py outline.json --approve --by "user, in chat"` records the user's
+approval in `outline.approved.json` beside it, bound to a hash of the ordered
+titles. The lint reads that file from beside the spec (or `--approval`) and
+warns `story-unapproved` when it is missing and `story-changed` when the
+deck's titles no longer match it. Layouts are not part of the hash: showing a
+point differently does not change the approved story; changing, adding or
+reordering a title does.
 
 ## Example
 
