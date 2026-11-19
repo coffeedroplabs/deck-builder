@@ -111,8 +111,15 @@ class Planner:
             # column so the left edge matches the other slides, and centre the
             # message as the default grid does.
             x, _, w, _ = tmpl.get("title") or default_title
-            return ((x, default_title[1], w, default_title[3]), anchor,
-                    (x, default_body[1], w, default_body[3]))
+            _, by, _, bh = default_body
+            # The supporting line keeps the default grid's gap above the
+            # template's own footer row, which can start higher than ours.
+            gap = emu((FOOTER_Y_IN - BODY_BOTTOM_IN) * self.sy)
+            for part in ("footer", "number"):
+                slot = tmpl.get(part)
+                if slot and slot[1] - gap > by and slot[0] < x + w and slot[0] + slot[2] > x:
+                    bh = min(bh, slot[1] - gap - by)
+            return ((x, default_title[1], w, default_title[3]), anchor, (x, by, w, bh))
         # A template's own placeholder decides its anchor; ours would fight it.
         return tmpl.get("title") or default_title, None, tmpl.get("body") or default_body
 

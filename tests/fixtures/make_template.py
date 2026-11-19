@@ -4,7 +4,7 @@
 # ///
 """Write a small brand template for testing template mode.
 
-    uv run make_template.py brand.pptx [--logo-over-title] [--footer-logo]
+    uv run make_template.py brand.pptx [--logo-over-title] [--footer-logo] [--high-footer]
 
 It has what real company templates have and the default one lacks: its own
 theme colours and fonts, and a logo on the master in the top-right corner.
@@ -12,7 +12,8 @@ The content layouts' titles are narrowed to clear the logo, as a designer
 would; --logo-over-title leaves them full width, so the lint should catch
 every title covering the logo. --footer-logo adds a second mark bottom left,
 where the date placeholder sits: clear of the footer and slide-number
-placeholders, but inside the default grid's footer row.
+placeholders, but inside the default grid's footer row. --high-footer raises
+the footer row above the default grid's, as some company templates do.
 """
 
 import argparse
@@ -36,6 +37,7 @@ BRAND = {"base": "paper", "colors": {"bg": "FFFFFF", "text": "14213D", "muted": 
 LOGO = (Inches(11.9), Inches(0.3), Inches(0.95), Inches(0.5))
 FOOTER_LOGO = (Inches(0.67), Inches(6.9), Inches(1.4), Inches(0.45))
 LOGO_CLEARANCE = Inches(0.25)
+HIGH_FOOTER_Y = Inches(6.6)
 NARROWED = ("Title Only", "Title and Content", "Two Content", "Comparison")
 
 
@@ -54,7 +56,7 @@ def _add_master_art(prs, name, box, text):
     ooxml.remove_all_slides(prs)
 
 
-def make_template(path, logo_over_title=False, footer_logo=False, accent=None):
+def make_template(path, logo_over_title=False, footer_logo=False, accent=None, high_footer=False):
     prs = Presentation()
     ooxml.scale_master(prs, themes.SLIDE_W / prs.slide_width, themes.SLIDE_H / prs.slide_height)
     prs.slide_width, prs.slide_height = themes.SLIDE_W, themes.SLIDE_H
@@ -63,6 +65,19 @@ def make_template(path, logo_over_title=False, footer_logo=False, accent=None):
     _add_master_art(prs, "Brand logo", LOGO, "BRAND")
     if footer_logo:
         _add_master_art(prs, "Footer mark", FOOTER_LOGO, "brand.example")
+    if high_footer:
+        # As in the Fernhill eval template, the content placeholders end where
+        # the raised footer row starts.
+        for part in [prs.slide_master, *prs.slide_layouts]:
+            for ph in part.placeholders:
+                kind = ph._element.ph.get("type", "obj")
+                left, top, width, height = ph.left, ph.top, ph.width, ph.height
+                if None in (left, top, width, height):
+                    continue
+                if kind in ("dt", "ftr", "sldNum"):
+                    ph.left, ph.top, ph.width, ph.height = left, HIGH_FOOTER_Y, width, height
+                elif kind not in ("title", "ctrTitle") and top + height > HIGH_FOOTER_Y:
+                    ph.left, ph.top, ph.width, ph.height = left, top, width, HIGH_FOOTER_Y - top
     if not logo_over_title:
         for lay in prs.slide_layouts:
             if lay.name not in NARROWED:
@@ -82,8 +97,9 @@ def main(argv=None):
     ap.add_argument("out")
     ap.add_argument("--logo-over-title", action="store_true")
     ap.add_argument("--footer-logo", action="store_true")
+    ap.add_argument("--high-footer", action="store_true")
     args = ap.parse_args(argv)
-    make_template(args.out, args.logo_over_title, args.footer_logo)
+    make_template(args.out, args.logo_over_title, args.footer_logo, high_footer=args.high_footer)
     print(f"Wrote {args.out}")
 
 

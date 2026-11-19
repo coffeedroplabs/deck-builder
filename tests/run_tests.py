@@ -467,6 +467,7 @@ def templates(tmp_path_factory):
     return {"brand": make_template(str(folder / "brand.pptx")),
             "brand-bad": make_template(str(folder / "brand-bad.pptx"), logo_over_title=True),
             "brand-footer": make_template(str(folder / "brand-footer.pptx"), footer_logo=True),
+            "brand-high-footer": make_template(str(folder / "brand-high-footer.pptx"), high_footer=True),
             # A light green like many brand accents: fine as a bar, too light for words on white.
             "brand-light": make_template(str(folder / "brand-light.pptx"), accent="90C226")}
 
@@ -535,6 +536,13 @@ def test_the_footer_fills_the_templates_footer_placeholders(deck_dir, templates)
                 checked.add(shape.name)
     assert checked == {"Source", "Slide number"}
     assert "template-art" not in codes(inspect_template.inspect(templates["brand-footer"])["problems"])
+
+
+def test_a_statement_stops_above_a_high_template_footer(deck_dir, templates):
+    # The canary's statement has a supporting line and a source. Sized for the
+    # default grid, that line ran into a footer row starting higher than ours.
+    _, result = build_and_lint(deck_dir, template_spec(deck_dir, templates["brand-high-footer"]))
+    assert result["passed"], result["errors"]
 
 
 def test_a_changed_template_is_refused(deck_dir, templates):
