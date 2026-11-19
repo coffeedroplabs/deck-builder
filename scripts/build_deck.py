@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.10"
+# requires-python = ">=3.11"
 # dependencies = ["python-pptx==1.0.2", "pillow==13.0.0"]
 # ///
 """Build an editable .pptx from a deck spec.

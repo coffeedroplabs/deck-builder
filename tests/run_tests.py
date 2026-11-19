@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.10"
+# requires-python = ">=3.11"
 # dependencies = ["python-pptx==1.0.2", "pillow==13.0.0", "pytest==9.2.0"]
 # ///
 """The deck-builder test suite.

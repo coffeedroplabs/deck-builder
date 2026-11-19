@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.10"
+# requires-python = ">=3.11"
 # dependencies = ["python-pptx==1.0.2"]
 # ///
 """Read a company template and suggest how a deck spec should use it.

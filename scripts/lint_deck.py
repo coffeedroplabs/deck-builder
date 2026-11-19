@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.10"
+# requires-python = ">=3.11"
 # dependencies = ["python-pptx==1.0.2"]
 # ///
 """Check a built deck and write gate_result.json, the only pass/fail verdict.

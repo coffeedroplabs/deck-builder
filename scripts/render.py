@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.10"
+# requires-python = ">=3.11"
 # dependencies = ["pillow==13.0.0"]
 # ///
 """Render a deck to PNGs and measure its text with the real layout engine.
