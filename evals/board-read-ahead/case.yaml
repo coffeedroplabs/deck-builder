@@ -1,0 +1,14 @@
+schema_version: "1.1"
+name: board-read-ahead
+expected_outcome: |
+  An editable h1-board-pack.pptx that a board member can read alone. The decision
+  the board must make (approve the A$600k Brisbane warehouse for Q4 2026 or delay
+  it to Q2 2027, recommended: approve) comes first, not last, with what each option
+  does to runway (about 20 months if approved, about 22 if delayed) and the 30 Nov
+  site deadline. H1 results follow: revenue A$4.20m against A$4.60m plan, margin up
+  from 38.0% to 42.0%, cash A$4.83m, customers up 18%. Every number matches the
+  inputs and carries a source; at least one chart is native; read-ahead text can be
+  smaller than a live deck's but stays at 10 pt or more, and nothing overflows or
+  overlaps when PowerPoint lays it out.
+context:
+  scaffold_script: place-files.sh

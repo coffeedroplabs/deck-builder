@@ -1,0 +1,13 @@
+schema_version: "1.1"
+name: template-pitch
+expected_outcome: |
+  An editable coastline-pitch.pptx built on fernhill.potx: its theme, fonts and
+  layouts, with the white Fernhill logo in the bottom right left uncovered on every
+  slide. The story runs from Coastline's problem (A$1.9m written off, 6% stockouts,
+  38 stores ordering by hand) to what Fernhill does, the results at Greenleaf and
+  Harbourside, the pilot and its price, and ends on the ask: sign off the 5-store
+  pilot (A$18,000) by 15 Dec. Every number matches the notes and carries a source;
+  text is at least 16 pt outside the footer, and nothing overflows or overlaps when
+  PowerPoint lays it out.
+context:
+  scaffold_script: place-files.sh

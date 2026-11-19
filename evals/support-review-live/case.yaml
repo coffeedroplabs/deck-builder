@@ -1,0 +1,14 @@
+schema_version: "1.1"
+name: support-review-live
+expected_outcome: |
+  An editable support-review.pptx for a 15-minute live talk on a big screen. The
+  titles alone tell the story: tickets and wait times rose since the April courier
+  switch, mostly "where is my order" tickets, CSAT fell and slow replies cost
+  customers, the cheaper options fall short, so add two agents. It ends on the ask
+  (two agents for Q4, A$34k) rather than "Questions". Every number matches the
+  notes or the export and carries a source; at least one chart is a native
+  PowerPoint chart; text is large enough to read across a room (18 pt or more
+  outside the footer) and nothing overflows or overlaps when PowerPoint lays it
+  out. Content slides have speaker notes.
+context:
+  scaffold_script: place-files.sh
