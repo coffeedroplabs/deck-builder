@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "deck-builder",
+  "version": "1.0.0",
+  "description": "Build editable PowerPoint decks that pass measured checks: a story you can follow from the titles alone, text measured to fit in PowerPoint, font floors, contrast, alt text and sourced numbers, in a default theme or your company template.",
+  "author": {
+    "name": "CoffeeDrop Labs"
+  },
+  "homepage": "https://github.com/coffeedroplabs/deck-builder",
+  "repository": "https://github.com/coffeedroplabs/deck-builder",
+  "license": "MIT",
+  "keywords": [
+    "powerpoint",
+    "pptx",
+    "presentations",
+    "slides",
+    "python-pptx"
+  ],
+  "skills": [
+    "./"
+  ]
+}

@@ -23,17 +23,17 @@ found.
    time: wider fan-outs have hit the account's usage limit and returned
    nothing.
 
-Spawn each with the Agent tool (`general-purpose`), giving it the agent file
-from `agents/` to read first and the paths it needs. Do not tell a reviewer
+Spawn each with the Agent tool (`general-purpose`), giving it the prompt file
+from `reviewers/` to read first and the paths it needs. Do not tell a reviewer
 what you think is wrong or what you already fixed: a reviewer handed a
 hypothesis tends to confirm it.
 
 | Agent | Reads first | Gets | Never gets |
 |---|---|---|---|
-| Blind reader | `agents/blind-reader.md` | `render/slide-NN.png` | brief, spec, notes, material |
-| Critic: argument and evidence | `agents/critic.md`, lens `argument` | slide PNGs, `deck.json`, `brief.md`, the user's material and sources | your opinion |
-| Critic: visual design | `agents/critic.md`, lens `visual` | slide PNGs, `render/contact.png`, `references/design-rules.md` section 8, `gate_result.json` | brief, material |
-| Critic: audience and profile | `agents/critic.md`, lens `audience` | slide PNGs, `brief.md`, `deck.json` (for the notes), the profile's row in design-rules section 2 | material |
+| Blind reader | `reviewers/blind-reader.md` | `render/slide-NN.png` | brief, spec, notes, material |
+| Critic: argument and evidence | `reviewers/critic.md`, lens `argument` | slide PNGs, `deck.json`, `brief.md`, the user's material and sources | your opinion |
+| Critic: visual design | `reviewers/critic.md`, lens `visual` | slide PNGs, `render/contact.png`, `references/design-rules.md` section 8, `gate_result.json` | brief, material |
+| Critic: audience and profile | `reviewers/critic.md`, lens `audience` | slide PNGs, `brief.md`, `deck.json` (for the notes), the profile's row in design-rules section 2 | material |
 
 Point the agents at absolute paths and ask each to write its findings to a
 file in the deck folder (`review/blind-reader.json`,
@@ -44,7 +44,7 @@ If you cannot spawn agents (the host has no Agent tool, or you are yourself
 running as a sub-agent without one), the review cannot be independent, but do
 not skip it. Do the blind read first: look only at the slide pictures and
 write down the argument and the ask before you re-read the brief or the spec.
-Then take each critic lens from `agents/critic.md` in turn, write the findings
+Then take each critic lens from `reviewers/critic.md` in turn, write the findings
 to the same files, and tell the user it was a self-review, which misses more
 than an independent one.
 

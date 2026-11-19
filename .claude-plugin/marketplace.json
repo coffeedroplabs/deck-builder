@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "deck-builder",
+  "description": "The deck-builder skill for Claude Code: editable PowerPoint decks that pass measured checks.",
+  "owner": {
+    "name": "CoffeeDrop Labs"
+  },
+  "plugins": [
+    {
+      "name": "deck-builder",
+      "source": "./",
+      "description": "Build editable PowerPoint decks that pass measured checks.",
+      "category": "productivity",
+      "tags": ["powerpoint", "pptx", "presentations", "slides"]
+    }
+  ]
+}
