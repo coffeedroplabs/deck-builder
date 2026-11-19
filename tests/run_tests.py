@@ -243,6 +243,48 @@ def test_format_number(value, fmt, shown):
     assert charts.format_number(value, fmt) == shown
 
 
+def _line_slide(spec, names):
+    i = slide_index(spec, "chart", "bar")
+    spec["slides"][i]["chart"] = {
+        "type": "line", "categories": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"], "number_format": "0%",
+        "series": [{"name": n, "values": [0.1, 0.11, 0.19, 0.22, 0.14, 0.09 + k / 100]}
+                   for k, n in enumerate(names)]}
+    return i
+
+
+def _plot_layout(deck, i):
+    from pptx import Presentation
+    chart = next(s.chart for s in Presentation(deck).slides[i].shapes if s.has_chart)
+    return chart._chartSpace.chart.plotArea.find(qn("c:layout"))
+
+
+def test_line_names_get_room_at_the_line_ends(deck_dir):
+    spec = canary()
+    i = _line_slide(spec, ["Running tights", "Trail jackets", "Socks"])
+    report, result = build_and_lint(deck_dir, spec)
+    assert "series-name-long" not in codes(report["problems"])
+    assert result["passed"], result["errors"]
+    layout = _plot_layout(str(deck_dir / "deck.pptx"), i)
+    assert layout is not None
+    width = float(layout.find(f"{qn('c:manualLayout')}/{qn('c:w')}").get("val"))
+    assert 0.75 <= width < 1
+
+
+def test_a_single_line_keeps_the_full_width(deck_dir):
+    spec = canary()
+    i = _line_slide(spec, ["Return rate"])
+    build_and_lint(deck_dir, spec)
+    assert _plot_layout(str(deck_dir / "deck.pptx"), i) is None
+
+
+def test_a_long_series_name_warns(deck_dir):
+    spec = canary()
+    _line_slide(spec, ["Trail jackets and every other outerwear line we sell", "Socks"])
+    report, result = build_and_lint(deck_dir, spec)
+    assert "series-name-long" in codes(report["problems"])
+    assert result["passed"], result["errors"]
+
+
 def test_waterfall_series_floats_changes_on_the_running_total():
     assert charts.waterfall_series(["Start", "Up", "Down", "End"], [10, 5, -3, 12], ["Start", "End"]) == {
         "Base": [None, 10, 12, None],

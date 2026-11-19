@@ -10,6 +10,8 @@ from pptx.chart.data import CategoryChartData, XyChartData
 from pptx.enum.chart import (XL_AXIS_CROSSES, XL_CHART_TYPE, XL_LABEL_POSITION,
                              XL_LEGEND_POSITION, XL_MARKER_STYLE, XL_TICK_MARK)
 from pptx.enum.dml import MSO_THEME_COLOR
+from pptx.oxml import parse_xml
+from pptx.oxml.ns import nsdecls, qn
 from pptx.util import Pt
 
 import ooxml
@@ -38,6 +40,7 @@ MARKER_SIZE = 7
 ALT_MAX_POINTS = 16
 # Share of the tallest bar a Base point needs before a step label fits under the step.
 WATERFALL_LABEL_ROOM = 0.12
+PLOT_TOP = 0.03  # a manual plot area's top and bottom inset, as PowerPoint's own layout leaves
 
 
 # -- number formats -----------------------------------------------------------
@@ -459,5 +462,21 @@ def add_chart(slide, element, colors):
     chart.has_legend = False
     _font(chart.font, size, "tx2")
     BUILDERS[spec["type"]](chart, spec, size, colors)
+    if element.get("label_room"):
+        _reserve_right(chart, element["label_room"])
     ooxml.set_alt_text(frame, alt_text(spec))
     return frame
+
+
+def _reserve_right(chart, share):
+    """Pin the plot area, axis labels included, to the left of the chart and
+    leave `share` of the width free on the right for the line-end names."""
+    plot_area = chart._chartSpace.chart.plotArea
+    old = plot_area.find(qn("c:layout"))
+    if old is not None:
+        plot_area.remove(old)
+    plot_area.insert(0, parse_xml(
+        f'<c:layout {nsdecls("c")}><c:manualLayout>'
+        '<c:layoutTarget val="outer"/><c:xMode val="edge"/><c:yMode val="edge"/>'
+        f'<c:x val="0"/><c:y val="{PLOT_TOP}"/><c:w val="{1 - share:.4f}"/><c:h val="{1 - 2 * PLOT_TOP}"/>'
+        '</c:manualLayout></c:layout>'))

@@ -120,7 +120,11 @@ chart, which then takes 62% of the width).
   chart: Churn rate by month. Jul 4.1%, Aug 3.8%, Sep 2.9%."), which is usually
   better than a hand-written summary because it carries the numbers.
 - Multi-series line charts are labelled at the line ends instead of a legend.
-  Bar and column charts with several series keep a legend at the top.
+  The build narrows the plot so the longest name fits right of its line;
+  without that room PowerPoint pushes the names back across the lines. A name
+  that would take more than a quarter of the chart's width warns
+  `series-name-long`: shorten it, because every line loses that width. Bar and
+  column charts with several series keep a legend at the top.
 - The build refuses category labels that would collide at the profile's chart
   size: use `bar` instead of `column` for long names, or shorten them.
 

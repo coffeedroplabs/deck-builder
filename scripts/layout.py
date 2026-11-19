@@ -30,6 +30,8 @@ SOURCE_W_IN = 10.0
 NUMBER_W_IN = 1.0
 PROCESS_GAP_IN = 0.3
 CHART_SHARE = 0.62  # chart width when bullets sit beside it
+END_LABEL_PAD = 0.7  # em: PowerPoint's gap from the point plus the label's own margins
+MAX_END_LABEL_SHARE = 0.25
 IMAGE_SHARE = 0.55
 CELL_MARGIN_X_PT = 0.08 * 72
 CELL_MARGIN_Y_PT = 0.04 * 72
@@ -319,7 +321,33 @@ class Planner:
             els.append(self.side_bullets(slide, text_box))
         size = self.prof["sizes"]["chart"][0]
         self.check_categories(slide["chart"], chart_box, size)
-        return [{"kind": "chart", "name": "Chart", "box": chart_box, "chart": slide["chart"], "size": size}] + els
+        chart = {"kind": "chart", "name": "Chart", "box": chart_box, "chart": slide["chart"], "size": size}
+        room = self.end_label_room(slide["chart"], chart_box, size)
+        if room:
+            chart["label_room"] = room
+        return [chart] + els
+
+    def end_label_room(self, chart, box, size):
+        """Share of the chart width that names set at the line ends need.
+
+        PowerPoint keeps data labels inside the chart, so without this room it
+        pushes a name set right of the last point back across its own line.
+        """
+        if chart["type"] != "line" or len(chart["series"]) < 2:
+            return None
+        family = self.fonts["minor"]
+        widest = max(chart["series"], key=lambda s: textfit.text_width_pt(str(s["name"]), family, size))
+        width = pt(box[2])
+        need = textfit.text_width_pt(str(widest["name"]), family, size) + END_LABEL_PAD * size
+        if need / width > MAX_END_LABEL_SHARE:
+            self.problem("series-name-long", "chart.series",
+                         f"series name {widest['name']!r} takes {need / width:.0%} of the chart's width at the "
+                         "line end; shorten it so the lines keep their room", severity="warning")
+        # The last point sits half a category band in from the plot's edge, so
+        # the name already has that much room. The band is underestimated, as
+        # if axis labels took a fifth of the width, so a name is never pushed back.
+        half_band = (width - need) * 0.8 / (2 * len(chart["categories"]))
+        return round(max(need - half_band, 0) / width, 4)
 
     def check_categories(self, chart, box, size):
         ctype = chart["type"]
