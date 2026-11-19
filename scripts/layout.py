@@ -288,17 +288,25 @@ class Planner:
         return [self.text_el("Body", body, paras)]
 
     def plan_conclusion(self, slide, body):
-        els = []
-        bullets_box = body
-        if slide.get("ask"):
-            bullets_box = self.sub_box(body, 0, 0.66)
-            ask_box = self.sub_box(body, 0.71, 0.29)
-        paras = self.fit_one("bullets", bullets_box,
-                             lambda s, sub: self.bullet_paras(slide["bullets"], s, sub), "body", "body2")
-        els.append(self.text_el("Body", bullets_box, paras))
-        if slide.get("ask"):
-            els.append(self.simple("Ask", "ask", ask_box, slide["ask"], "body", color="accent1", bold=True))
-        return els
+        def make(size, sub):
+            return self.bullet_paras(slide["bullets"], size, sub)
+
+        if not slide.get("ask"):
+            return [self.text_el("Body", body, self.fit_one("bullets", body, make, "body", "body2"))]
+        # The ask sits one body line under the last bullet, not at a fixed
+        # height, so three short takeaways do not leave a hole above it. That
+        # line belongs to the bullets' box, so one more wrapped line than
+        # predicted still stops short of the ask. The ask always keeps the
+        # bottom 29% of the body.
+        x, y, w, h = body
+        line = int(textfit.LINE_HEIGHT * self.prof["sizes"]["body"][0] * EMU_PT)
+        room = int(h * 0.71) - line
+        paras = self.fit_one("bullets", (x, y, w, room), make, "body", "body2")
+        needed = int(textfit.fits(paras, pt(w), pt(room))["needed"] * EMU_PT)
+        bullets_h = min(needed, room) + line
+        ask_box = (x, y + bullets_h, w, h - bullets_h)
+        return [self.text_el("Body", (x, y, w, bullets_h), paras),
+                self.simple("Ask", "ask", ask_box, slide["ask"], "body", color="accent1", bold=True)]
 
     def plan_two_column(self, slide, body):
         boxes = self.columns(body, 2, GUTTER_IN)

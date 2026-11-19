@@ -186,8 +186,9 @@ a template habit.
 
 ### `conclusion`
 `title`, `bullets` (at most 3 takeaways), optional `ask` (the decision or next
-step you want, set apart in the accent colour). The last content slide; never
-end on "Thank you" or "Questions".
+step you want, set in bold accent one line under the last bullet), and
+`source` when a takeaway quotes a number, as on any slide. The last content
+slide; never end on "Thank you" or "Questions".
 
 ## Outline
 

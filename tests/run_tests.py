@@ -35,6 +35,7 @@ import ooxml  # noqa: E402
 import render  # noqa: E402
 import spec_check  # noqa: E402
 import textfit  # noqa: E402
+import themes  # noqa: E402
 from make_template import make_template  # noqa: E402
 
 EM_DASH = "—"
@@ -329,6 +330,33 @@ def test_value_labels_on_clustered_columns_must_fit_their_column(deck_dir):
     chart["labels"] = True
     chart["series"].pop()
     assert "value-labels-collide" not in problems()
+
+
+def test_the_ask_follows_the_bullets_instead_of_a_fixed_height(deck_dir):
+    spec = canary()
+    i = slide_index(spec, "conclusion")
+    conclusion = spec["slides"][i]
+
+    def ask_offset():
+        """How far the ask starts below the bullets' top, as a share of the body, and in inches."""
+        report = build_deck.build(write_spec(deck_dir, spec), None, check_only=True)
+        assert spec_check.errors(report["problems"]) == []
+        boxes = {e["name"]: e["box_emu"] for e in report["slides"][i]["elements"]}
+        body, ask = boxes["Body"], boxes["Ask"]
+        assert body[1] + body[3] <= ask[1]
+        offset = ask[1] - body[1]
+        return offset / (body[3] + ask[3]), offset / 914400
+
+    _, three = ask_offset()
+    conclusion["bullets"] = conclusion["bullets"][:1]
+    _, one = ask_offset()
+    # Each one-line bullet dropped takes its line and the half line above it.
+    size = themes.PROFILES["live"]["sizes"]["body"][0]
+    assert three - one == pytest.approx(2 * (textfit.LINE_HEIGHT + 0.5) * size / 72, abs=0.05)
+
+    conclusion["bullets"] = ["Returns now cost more than shipping on every trail jacket we sell online"] * 3
+    share, _ = ask_offset()
+    assert share <= 0.71
 
 
 def test_waterfall_series_floats_changes_on_the_running_total():
