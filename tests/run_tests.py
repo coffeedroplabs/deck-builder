@@ -379,6 +379,20 @@ def test_the_ask_follows_the_bullets_instead_of_a_fixed_height(deck_dir):
     assert share <= 0.71
 
 
+def test_bar_and_waterfall_axes_start_at_zero(deck_dir):
+    # Left automatic, PowerPoint started this column axis near 36%, so the
+    # 38% to 42% rise drew as a tripling.
+    spec = canary()
+    i = slide_index(spec, "chart", "column")
+    spec["slides"][i]["chart"].update(number_format="0.0%", series=[
+        {"name": "Gross margin", "values": [0.38, 0.385, 0.41, 0.412, 0.415, 0.42]}])
+    build_and_lint(deck_dir, spec)
+    slides = Presentation(str(deck_dir / "deck.pptx")).slides
+    for kind in ("column", "bar", "waterfall"):
+        chart = next(s.chart for s in slides[slide_index(spec, "chart", kind)].shapes if s.has_chart)
+        assert chart.value_axis.minimum_scale == 0, kind
+
+
 def test_waterfall_series_floats_changes_on_the_running_total():
     assert charts.waterfall_series(["Start", "Up", "Down", "End"], [10, 5, -3, 12], ["Start", "End"]) == {
         "Base": [None, 10, 12, None],

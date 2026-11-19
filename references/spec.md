@@ -93,7 +93,11 @@ chart, which then takes 62% of the width).
   name (several series). Highlighted marks take the accent; the rest take the
   muted series colour. Without it, a single series is all accent and several
   series take accent, muted, third in order. Highlight the thing the title
-  claims.
+  claims. On a single-series line, the highlighted category gets a marker and,
+  with labels off, its value.
+- Bars, columns and waterfalls always start at zero, so a bar's length is its
+  value. A small change on a large base (margin from 38% to 42%) then looks
+  flat: show it as a `line`, or chart the change itself.
 - `labels`: data labels on the marks, for `bar`, `column` and `line` only
   (default true for single-series bar and column, false otherwise). With
   labels on, the value axis is hidden. Stacked charts, waterfalls, pies and

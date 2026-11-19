@@ -170,6 +170,17 @@ def waterfall_series(categories, values, totals):
     return {"Base": base, "Up": up, "Down": down, "Total": total}
 
 
+def _zero_baseline(axis, values):
+    # A bar's length is its value, so its axis starts at zero. Left alone,
+    # PowerPoint starts it near the smallest value when the values sit close
+    # together, and a rise from 38% to 42% draws as a tripling.
+    values = [v for v in values if v is not None]
+    if all(v >= 0 for v in values):
+        axis.minimum_scale = 0
+    elif all(v <= 0 for v in values):
+        axis.maximum_scale = 0
+
+
 # -- builders per type --------------------------------------------------------
 
 def _build_bar_like(chart, spec, size, colors):
@@ -203,6 +214,7 @@ def _build_bar_like(chart, spec, size, colors):
         _data_labels(plot, size, fmt, XL_LABEL_POSITION.OUTSIDE_END)
     _style_category_axis(chart.category_axis, size)
     _style_value_axis(chart.value_axis, size, fmt, visible=not labels)
+    _zero_baseline(chart.value_axis, [v for x in series for v in x["values"]])
     if ctype in ("bar", "stacked-bar"):
         # Bars read top-down in the order given, as a ranked list does.
         chart.category_axis.reverse_order = True
@@ -314,6 +326,7 @@ def _build_waterfall(chart, spec, size, colors):
     chart.has_legend = False
     _style_category_axis(chart.category_axis, size)
     _style_value_axis(chart.value_axis, size, fmt, visible=False)
+    _zero_baseline(chart.value_axis, [v for k in data for v in data[k]])
 
 
 def _build_scatter(chart, spec, size, colors):

@@ -165,6 +165,7 @@ it does, one of them is usually a comparison (`two-column`), a sequence
 | Compare a few items, short names | `column` |
 | Compare items with long names, or rank them | `bar` (sorted, largest first) |
 | Change over time, many points or several series | `line` |
+| A small change on a large base (38% to 42%) | `line`: bars start at zero, so the change looks flat |
 | How a total breaks into parts, two or three parts | `pie` only if the point is "most of it is one thing"; otherwise `bar` |
 | Parts of a total compared across groups | `stacked-bar` or `stacked-column`, at most three parts |
 | How a start value became an end value | `waterfall` |
