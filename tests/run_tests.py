@@ -132,6 +132,26 @@ def test_lint_crash_overwrites_a_passing_verdict(deck_dir):
     assert verdict["passed"] is False and verdict["crash"]
 
 
+def test_a_lone_last_word_in_the_title_or_ask_is_flagged(deck_dir):
+    spec = canary()
+    spec_path = write_spec(deck_dir, spec)
+    deck = str(deck_dir / "deck.pptx")
+    assert build_deck.build(spec_path, deck)["built"]
+    lint = lint_deck.Lint(deck, spec, str(deck_dir), themes.profile(spec["profile"]))
+
+    def measured(lines):
+        # A box tall enough for its text, so only the line breaks matter.
+        return {"top": 0, "height": 200, "bound_top": 0, "bound_height": 100, "font_sizes": [28],
+                "lines": len(lines), "line_texts": lines}
+
+    # The line PowerPoint wrapped in the Fernhill pitch, carriage returns and all.
+    lint._check_measured_text(10, "Ask", measured(["Decision needed: sign off the pilot by 15 ", "December\r"]))
+    lint._check_measured_text(10, "Title", measured(["Sign off the 5-store pilot by 15 December so it ",
+                                                     "runs January to March"]))
+    lint._check_measured_text(10, "Body", measured(["Coastline wrote off A$1.9m of expired stock last ", "year"]))
+    assert [(p["code"], p["field"]) for p in lint.problems] == [("ask-widow", "Ask")]
+
+
 def test_build_crash_leaves_a_failed_report(deck_dir):
     spec_path = deck_dir / "deck.json"
     spec_path.write_text("{ not json", encoding="utf-8")

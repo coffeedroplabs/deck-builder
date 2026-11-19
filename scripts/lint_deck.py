@@ -274,11 +274,16 @@ class Lint:
             if lines > self.prof["max_title_lines"]:
                 self.add("error", "title-lines", n, name,
                          f"title runs to {lines} lines; keep it to {self.prof['max_title_lines']}")
+        # The ask is set bold in the accent colour, so a lone last word there
+        # stands out as much as one under a title.
+        if name in ("Title", "Ask"):
             texts = [t for t in _as_list(m.get("line_texts")) if t and t.strip()]
             if len(texts) >= 2 and rules.word_count(texts[-1]) == 1:
-                self.add("warning", "title-widow", n, name,
-                         f"the title's last line is one word ({texts[-1].strip()!r}); cut words until it fits "
-                         "one line or the lines balance (cutting never trips title-long, padding can)")
+                what = name.lower()
+                why = " (cutting never trips title-long, padding can)" if name == "Title" else ""
+                self.add("warning", f"{what}-widow", n, name,
+                         f"the {what}'s last line is one word ({texts[-1].strip()!r}); cut words until it fits "
+                         f"one line or the lines balance{why}")
 
     # -- the outline the user approved -------------------------------------------
 

@@ -99,7 +99,8 @@ The checks behind this:
   three words or fewer without a figure.
 - `title-long`, `title-lines`, `title-widow`: too many words, more than two
   lines, or a last line of one word, measured at the title's real size. Fix a
-  widow by cutting words, not adding them.
+  widow by cutting words, not adding them. `ask-widow` is the same warning for
+  the conclusion's bold ask.
 - `count-mismatch`: a title that promises "three reasons" must have three
   bullets, steps or rows.
 - `duplicate-title` and `title-near-duplicate`: two slides making the same
