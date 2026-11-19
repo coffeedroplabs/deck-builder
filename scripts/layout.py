@@ -22,8 +22,9 @@ REF_H_IN = themes.SLIDE_H / EMU_IN
 MARGIN_IN = themes.GRID["margin_x"] * REF_W_IN
 CONTENT_W_IN = REF_W_IN - 2 * MARGIN_IN
 GUTTER_IN = themes.GRID["gutter"] * REF_W_IN
-BODY_Y_IN = themes.GRID["body_y"] * REF_H_IN
-BODY_H_IN = themes.GRID["body_bottom"] * REF_H_IN - BODY_Y_IN
+TITLE_Y_IN = themes.GRID["title_y"] * REF_H_IN
+BODY_BOTTOM_IN = themes.GRID["body_bottom"] * REF_H_IN
+TITLE_GAP_LINES = 1.0
 FOOTER_Y_IN = themes.GRID["footer_y"] * REF_H_IN
 FOOTER_H_IN = themes.GRID["footer_h"] * REF_H_IN
 SOURCE_W_IN = 10.0
@@ -78,6 +79,14 @@ class Planner:
         self.slide_numbers = slide_numbers
         self.problems = []
         self.n = 0
+        # The title band holds the profile's longest title at its base size, so
+        # a read-ahead deck's 24 pt titles do not sit in a band sized for 36 pt
+        # ones and leave an inch of white above every chart. The body starts a
+        # full title line lower: any less and the gap matches the space between
+        # bullets, so the title stops reading as its own block.
+        line_in = textfit.LINE_HEIGHT * prof["sizes"]["title"][0] * TITLE_LINE_SPACING / 72
+        self.title_h_in = prof["max_title_lines"] * line_in
+        self.body_y_in = TITLE_Y_IN + self.title_h_in + TITLE_GAP_LINES * line_in
 
     # -- geometry -----------------------------------------------------------
 
@@ -86,9 +95,8 @@ class Planner:
 
     def frame(self, layout):
         """(title box, title anchor, body box) for a layout."""
-        default_title = self.box(MARGIN_IN, themes.GRID["title_y"] * REF_H_IN, CONTENT_W_IN,
-                                 themes.GRID["title_h"] * REF_H_IN)
-        default_body = self.box(MARGIN_IN, BODY_Y_IN, CONTENT_W_IN, BODY_H_IN)
+        default_title = self.box(MARGIN_IN, TITLE_Y_IN, CONTENT_W_IN, self.title_h_in)
+        default_body = self.box(MARGIN_IN, self.body_y_in, CONTENT_W_IN, BODY_BOTTOM_IN - self.body_y_in)
         anchor = "t"
         if layout in SPECIAL_FRAMES:
             ty, th, anchor, by, bh = SPECIAL_FRAMES[layout]

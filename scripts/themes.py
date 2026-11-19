@@ -132,11 +132,13 @@ ROLE_SCHEME = {
 # The slide grid as fractions of slide width (x, w) and height (y, h). Side
 # margins follow Office's 16:9 master (0.917 in of 13.333 in). Office's own
 # footer sits lower, but that leaves less than the 5% safe margin, so the
-# footer band here ends 0.4 in above the slide edge.
+# footer band here ends 0.4 in above the slide edge. The title band's height
+# and the body's top depend on the profile's title size, so layout.py derives
+# them.
 GRID = {
     "margin_x": 0.06875,
-    "title_y": 0.0533, "title_h": 0.1933,
-    "body_y": 0.2667, "body_bottom": 0.8867,
+    "title_y": 0.0533,
+    "body_bottom": 0.8867,
     "footer_y": 0.9067, "footer_h": 0.04,
     "gutter": 0.03,
 }
