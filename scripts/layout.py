@@ -92,10 +92,22 @@ class Planner:
             default_title = self.box(MARGIN_IN, ty, CONTENT_W_IN, th)
             default_body = self.box(MARGIN_IN, by, CONTENT_W_IN, bh)
         tmpl = self.frames.get(layout) or {}
-        if tmpl:
-            # A template's own placeholder decides its anchor; ours would fight it.
-            anchor = None
-        return tmpl.get("title") or default_title, anchor, tmpl.get("body") or default_body
+        if not tmpl:
+            return default_title, anchor, default_body
+        if layout == "statement":
+            # Templates have no statement layout: keep the template's title
+            # column so the left edge matches the other slides, and centre the
+            # message as the default grid does.
+            x, _, w, _ = tmpl.get("title") or default_title
+            return ((x, default_title[1], w, default_title[3]), anchor,
+                    (x, default_body[1], w, default_body[3]))
+        # A template's own placeholder decides its anchor; ours would fight it.
+        return tmpl.get("title") or default_title, None, tmpl.get("body") or default_body
+
+    def frame_style(self, layout, part):
+        """(align, anchor) the template gives a frame's text; None anchor means the default."""
+        tmpl = self.frames.get(layout) or {}
+        return tmpl.get(f"{part}_align") or "l", tmpl.get(f"{part}_anchor")
 
     @staticmethod
     def sub_box(body, y_frac, h_frac, x_frac=0.0, w_frac=1.0):
@@ -214,11 +226,13 @@ class Planner:
         max_lines = self.prof["max_title_lines"] if role == "title" else None
         code = "title-lines" if max_lines else "text-overflow"
 
+        align, _ = self.frame_style(layout, "title")
+
         def make(size, _sub):
-            return [self.para(slide["title"], size, font="major", bold=self.title_bold,
+            return [self.para(slide["title"], size, font="major", bold=self.title_bold, align=align,
                               line_spacing=TITLE_LINE_SPACING, max_lines=max_lines)]
         paras = self.fit_one("title", box, make, role, code=code)
-        return self.text_el("Title", box, paras, anchor or "t", placeholder=True)
+        return self.text_el("Title", box, paras, anchor, placeholder=True)
 
     def simple(self, name, field, box, text, role, *, color="tx1", font="minor", bold=False,
                italic=False, align="l", anchor="t", max_lines=None):
@@ -230,25 +244,31 @@ class Planner:
 
     def plan_cover(self, slide, body):
         els = []
+        align, anchor = self.frame_style("cover", "body")
         if slide.get("subtitle"):
             els.append(self.simple("Subtitle", "subtitle", self.sub_box(body, 0, 0.55), slide["subtitle"],
-                                   "body", color="tx2"))
+                                   "body", color="tx2", align=align, anchor=anchor or "t"))
         if slide.get("byline"):
             x, y, w, h = body
             bh = min(emu(0.65 * self.sy), int(h * 0.4))
             els.append(self.simple("Byline", "byline", (x, y + h - bh, w, bh), slide["byline"], "small",
-                                   color="tx2", anchor="b"))
+                                   color="tx2", align=align, anchor="b"))
         return els
 
     def plan_section(self, slide, body):
         if not slide.get("subtitle"):
             return []
-        return [self.simple("Subtitle", "subtitle", body, slide["subtitle"], "body", color="tx2")]
+        align, anchor = self.frame_style("section", "body")
+        return [self.simple("Subtitle", "subtitle", body, slide["subtitle"], "body", color="tx2",
+                            align=align, anchor=anchor or "t")]
 
     def plan_statement(self, slide, body):
         if not slide.get("body"):
             return []
-        return [self.simple("Body", "body", body, slide["body"], "body2", color="tx2")]
+        # The supporting line sits under the message in the title's column,
+        # so it follows the title's alignment, not the body placeholder's.
+        align, _ = self.frame_style("statement", "title")
+        return [self.simple("Body", "body", body, slide["body"], "body2", color="tx2", align=align)]
 
     def plan_bullets(self, slide, body):
         paras = self.fit_one("bullets", body, lambda s, sub: self.bullet_paras(slide["bullets"], s, sub),

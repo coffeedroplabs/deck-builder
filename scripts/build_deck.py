@@ -95,14 +95,14 @@ def open_deck(spec, spec_dir):
                                      f"it has: {', '.join(by_name)}"))
             continue
         chosen[name] = lay
-        title = body = None
+        frame = {"title": None, "body": None}
         for ph in lay.placeholders:
             kind = ph._element.ph.get("type", "obj")
-            if kind in ("title", "ctrTitle") and title is None:
-                title = _box(ph)
-            elif kind in BODY_PLACEHOLDERS and body is None:
-                body = _box(ph)
-        frames[name] = {"title": title, "body": body}
+            part = "title" if kind in ("title", "ctrTitle") else "body" if kind in BODY_PLACEHOLDERS else None
+            if part and frame[part] is None:
+                frame[part] = _box(ph)
+                frame[f"{part}_align"], frame[f"{part}_anchor"] = ooxml.placeholder_text_style(ph, lay.slide_master)
+        frames[name] = frame
     return prs, (lambda name: chosen.get(name)), frames, _template_title_bold(prs), problems
 
 

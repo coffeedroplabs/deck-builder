@@ -184,6 +184,31 @@ def apply_theme(prs, theme):
         cm.set(key, value)
 
 
+def placeholder_text_style(ph, master):
+    """(align, anchor) a layout placeholder gives its text, inherited the way
+    PowerPoint does it: the layout placeholder, then the master placeholder,
+    then the master's title or body text style. Codes are the planner's:
+    align l/ctr/r, anchor t/m/b."""
+    base = getattr(ph, "_base_placeholder", None)
+    align = anchor = None
+    for el in [ph._element] + ([base._element] if base is not None else []):
+        body = el.find(qn("p:txBody"))
+        if body is None:
+            continue
+        lvl1 = body.find(f"{qn('a:lstStyle')}/{qn('a:lvl1pPr')}")
+        if align is None and lvl1 is not None:
+            align = lvl1.get("algn")
+        body_pr = body.find(qn("a:bodyPr"))
+        if anchor is None and body_pr is not None:
+            anchor = body_pr.get("anchor")
+    if align is None:
+        kind = ph._element.ph.get("type", "obj")
+        style = "p:titleStyle" if kind in ("title", "ctrTitle") else "p:bodyStyle"
+        lvl1 = master._element.find(f"{qn('p:txStyles')}/{qn(style)}/{qn('a:lvl1pPr')}")
+        align = lvl1.get("algn") if lvl1 is not None else None
+    return {"ctr": "ctr", "r": "r"}.get(align, "l"), {"ctr": "m", "b": "b"}.get(anchor, "t")
+
+
 def scale_master(prs, sx, sy):
     # The default template is 4:3; widening only the slide would leave the
     # master's placeholders, and every slide a user adds later, squeezed left.
