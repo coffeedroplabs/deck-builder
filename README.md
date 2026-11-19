@@ -78,7 +78,14 @@ Use one or the other, then start a new Claude Code session.
 | [uv](https://docs.astral.sh/uv/getting-started/installation/) | Runs every script with its pinned dependencies (python-pptx, Pillow). Nothing is installed globally, and uv fetches Python 3.11 or newer if you do not have it. |
 | Linux, macOS or WSL | Native Windows is not supported yet: the render lock uses `fcntl`. |
 | PowerPoint on Windows, reached from WSL | For measured fit, the heart of the skill. Without it, renders fall back to LibreOffice (`soffice` and `pdftoppm`), which draws the slides but cannot measure them, so overflow is predicted from font metrics and the lint says so. PowerPoint for Mac is not driven. The LibreOffice path is untested. |
-| Fonts, on Linux and WSL | `fontconfig fonts-liberation fonts-dejavu-core fonts-crosextra-carlito fonts-crosextra-caladea`, the metric-compatible stand-ins for Arial, Calibri and Cambria that the builder measures with. |
+| Fonts, on Linux and WSL | Liberation, Carlito and Caladea, the metric-compatible stand-ins for Arial, Calibri and Cambria that the builder measures with. |
+
+On Linux and WSL, install the fonts with:
+
+```bash
+sudo apt-get install fontconfig fonts-liberation fonts-dejavu-core \
+  fonts-crosextra-carlito fonts-crosextra-caladea
+```
 
 ## Use it
 
@@ -116,28 +123,26 @@ of every slide, the gate result with any warnings it kept and why, and what the 
 8. **Fix ladder.** Cut words, move detail to the notes or an appendix, split the slide, change the
    layout. Never shrink the text, never edit the .pptx by hand. Then back to step 4.
 
-Here is the ghost deck `check_story.py` printed for the support review above:
+Here is the ghost deck `check_story.py` printed for the support review above, with no warnings. Read
+only the titles; they carry the whole argument:
 
-```
-Ghost deck: read only the titles. They should carry the whole argument.
-
-  1  cover       Support is missing its 4-hour SLA and needs two more agents in Q4
-  2  chart       Monthly tickets rose from 1,820 in January to 2,840 in September
-  3  chart       Where-is-my-order tickets grew from 18% to 41% of volume between January and September
-  4  chart       First response has missed the 4-hour SLA every month since April
-  5  chart       Customer satisfaction fell from 91% to 79% between January and September
-  6  chart       Customers waiting over 24 hours for a first reply churn at double the 90-day rate
-  7  two-column  Macros and a weekend rota helped but did not fix weekday backlogs
-  8  table       We recommend hiring over a three-month chatbot build or per-ticket outsourcing
-  9  conclusion  Approve two agents for Q4 and ask ops to push the courier on tracking emails
-
-9 slides, 0 warning(s). Show the user this ghost deck and ask them to approve or change the titles.
-```
+| # | Layout | Title |
+|--:|---|---|
+| 1 | cover | Support is missing its 4-hour SLA and needs two more agents in Q4 |
+| 2 | chart | Monthly tickets rose from 1,820 in January to 2,840 in September |
+| 3 | chart | Where-is-my-order tickets grew from 18% to 41% of volume between January and September |
+| 4 | chart | First response has missed the 4-hour SLA every month since April |
+| 5 | chart | Customer satisfaction fell from 91% to 79% between January and September |
+| 6 | chart | Customers waiting over 24 hours for a first reply churn at double the 90-day rate |
+| 7 | two&#8209;column | Macros and a weekend rota helped but did not fix weekday backlogs |
+| 8 | table | We recommend hiring over a three-month chatbot build or per-ticket outsourcing |
+| 9 | conclusion | Approve two agents for Q4 and ask ops to push the courier on tracking emails |
 
 And the verdict once that deck was built, rendered and linted:
 
 ```
-PASSED: 0 error(s), 0 warning(s), text measured in PowerPoint, outline approved. Verdict: gate_result.json
+PASSED: 0 error(s), 0 warning(s), text measured in PowerPoint, outline approved.
+Verdict: gate_result.json
 ```
 
 ### The scripts
@@ -147,11 +152,11 @@ and exits 0 when all is well, 1 for a problem to fix in the spec and 2 for a cra
 
 | Script | Does |
 |---|---|
-| `check_story.py outline.json` | The story gate, on the titles alone. `--approve --by "user, in chat"` records your approval |
-| `inspect_template.py brand.potx` | Reads a company template and suggests how to map its layouts |
-| `build_deck.py deck.json -o deck.pptx` | Checks the spec, fits every text and builds; refuses rather than shrink or overflow |
-| `render.py deck.pptx -o render/` | Renders PNGs and a contact sheet, and measures every text box in PowerPoint |
-| `lint_deck.py deck.pptx --spec deck.json` | The gate: writes `gate_result.json` |
+| `check_story.py` | The story gate, on the titles in `outline.json` alone. `--approve --by` records who approved them |
+| `inspect_template.py` | Reads a company template (.potx or .pptx) and suggests how to map its layouts |
+| `build_deck.py` | Checks `deck.json`, fits every text and writes the .pptx; refuses rather than shrink or overflow |
+| `render.py` | Renders PNGs and a contact sheet, and measures every text box in PowerPoint |
+| `lint_deck.py` | The gate: checks the deck against its spec and the measurements, then writes `gate_result.json` |
 
 ```bash
 uv run -q scripts/build_deck.py deck.json -o deck.pptx
@@ -227,8 +232,8 @@ Read these numbers with care:
 
 ```
 SKILL.md          the skill: workflow, rules, and when to read each reference
-scripts/          story check, template inspector, builder, renderer and lint (PEP 723 inline deps)
-references/       the spec format, design rules and their evidence, template mode, review, compatibility
+scripts/          story check, template inspector, builder, renderer and lint
+references/       spec format, design rules, template mode, review, compatibility
 reviewers/        prompts for the blind reader and the critics
 evals/            three eval cases in the `claude plugin eval` format
 tests/            unit and end-to-end tests
@@ -237,17 +242,11 @@ tests/            unit and end-to-end tests
 
 ## Development
 
-On Linux, install the fonts first:
+With the fonts from [Requirements](#requirements) installed:
 
 ```bash
-sudo apt-get install fontconfig fonts-liberation fonts-dejavu-core fonts-crosextra-carlito fonts-crosextra-caladea
-```
-
-Then:
-
-```bash
-uv run -q tests/run_tests.py -q                          # the suite; the PowerPoint test is skipped
-DECK_BUILDER_RENDER=1 uv run -q tests/run_tests.py -q    # adds it, on WSL with PowerPoint
+uv run -q tests/run_tests.py -q                        # skips the PowerPoint test
+DECK_BUILDER_RENDER=1 uv run -q tests/run_tests.py -q  # runs it too (WSL with PowerPoint)
 uvx ruff@0.15.0 check scripts tests
 claude plugin validate . --strict
 ```
