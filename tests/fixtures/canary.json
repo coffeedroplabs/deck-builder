@@ -27,7 +27,7 @@
     },
     {
       "layout": "chart",
-      "title": "Return rates doubled after the March size-chart change",
+      "title": "Return rates doubled after the March size chart",
       "chart": {
         "type": "column",
         "categories": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
@@ -86,7 +86,7 @@
     },
     {
       "layout": "two-column",
-      "title": "Customers who returned for size still liked the product",
+      "title": "Customers returning for size still liked the product",
       "left": {"heading": "What they said", "bullets": ["Fabric and fit were praised", "Most asked for an exchange"]},
       "right": {"heading": "What they did", "bullets": ["Half reordered a different size", "Few left a low rating"]},
       "notes": "This is a sizing problem, not a product problem."
