@@ -66,6 +66,10 @@ Every profile:
 
 - End the main deck on a `conclusion` slide with the takeaways and the ask,
   and leave it up during questions. No "Thank you" or "Questions?" slide.
+  Because it stays up, it has to carry the decision on its own: the ask names
+  what is decided, what it costs and by when ("Approve the 5-store pilot
+  (A$18,000) by 15 Dec"), each takeaway keeps its number, and the slide takes
+  a `source` for them like any other.
 - Use a `section` slide only in decks long enough to need signposts (about
   fifteen slides or more); in a short deck it is a slide that says nothing.
 - An agenda slide is rarely worth it in a talk under twenty minutes. If the

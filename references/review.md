@@ -94,6 +94,11 @@ coordinate or a font size, because the spec is the only thing you can change.
 - **Numbers**: a finding that a number is wrong or unsourced is settled
   against the user's material, not against the critic's memory. If the
   material does not settle it, ask the user.
+- **A must-fix the material cannot settle**: when a critic wants a figure
+  the material does not have (a saving, a target, a payback), never invent it
+  to close the finding. Put the question, and any sum you can make from
+  sourced figures, in the speaker notes, and list it at delivery as an open
+  question for the user.
 - **Titles**: a fix that changes a title changes the approved story. Collect
   title changes and show the user the new ghost deck once, not one at a time.
 
